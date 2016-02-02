@@ -1,0 +1,12 @@
+#ifndef  OPENSLAM_VERSION_H
+#define  OPENSLAM_VERSION_H
+
+const char OPENSLAM_version_str[] = "${CMAKE_OPENSLAM_COMPLETE_NAME}";
+
+/** Version number of package in hexadecimal:
+  * A three digits version code, eg. 0.5.1 -> 0x051,  1.2.0 -> 0x120
+  */
+#define OPENSLAM_VERSION ${CMAKE_OPENSLAM_VERSION_CODE}
+
+
+#endif

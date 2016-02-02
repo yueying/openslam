@@ -1,0 +1,42 @@
+#ifndef OPENSLAM_CONFIG_H
+#define OPENSLAM_CONFIG_H
+
+/** 给出版本号
+  */
+#define OPENSLAM_VERSION_POSTFIX "${OPENSLAM_DLL_VERSION_POSTFIX}"
+
+/** 定义是否编译为动态库
+  */
+${CMAKE_OPENSLAM_BUILD_SHARED_LIB}
+
+/* 定义使用了什么平台 */
+#if defined(_WIN32) || defined(_WIN32_)  || defined(WIN32) || defined(_WIN64)
+    #define OPENSLAM_OS_WINDOWS
+#elif defined(unix) || defined(__unix__) || defined(__unix)
+    #define OPENSLAM_OS_LINUX
+#elif defined(__APPLE__)
+    #define OPENSLAM_OS_APPLE
+#else
+    #error Unsupported platform (Found neither _WIN32_, __unix__ or __APPLE__)
+#endif
+
+/** 检测是否使用了SSE2指令 */
+#if defined WIN32 && (!defined WIN64 || defined EM64T) && \
+ (_MSC_VER >= 1400) || (defined __SSE2__ && defined __GNUC__ && __GNUC__ >= 4)
+	#define OPENSLAM_HAS_SSE2  ${CMAKE_OPENSLAM_HAS_SSE2}   // This value can be set to 0 from CMake with DISABLE_SSE2
+#else
+	#define OPENSLAM_HAS_SSE2  0
+#endif
+
+// -------------------------------
+//			对平台进行进一步检测:
+// -------------------------------
+#if !defined(OPENSLAM_OS_WINDOWS) && !defined(OPENSLAM_OS_LINUX) && !defined(OPENSLAM_OS_APPLE)
+#error Neither OS detected from OPENSLAM_OS_LINUX, OPENSLAM_OS_APPLE or OPENSLAM_OS_WINDOWS!
+#endif
+
+
+#endif
+
+
+

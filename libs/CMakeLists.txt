@@ -1,0 +1,5 @@
+﻿project(ALL_OPENSLAM_LIBS)
+
+ADD_SUBDIRECTORY(base)
+ADD_SUBDIRECTORY(slam)
+
