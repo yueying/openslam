@@ -14,30 +14,33 @@
 
 #include <openslam/base/link_pragmas.h>
 
-namespace slam
+namespace openslam
 {
-	/** 不能复制类的基类，有任何的复制操作，编译器会报错.将深浅复制都写入父类的私有方法中，这样派生的子类也无法实现深浅复制
-	 *  例子：
-	 *
-	 *  \code
-	 *   class MyFancyClass : public openslam::utils::CNoncopyable
-	 *   {
-	 *    public:
-	 *     ...
-	 *   };
-	 *  \endcode
-	 * \ingroup openslam_base_grp
-	 */
-	class BASE_IMPEXP Noncopyable
+
+	namespace utils
 	{
-	protected:
-		Noncopyable() {}
-		~Noncopyable() {}
-	private:
-		Noncopyable(const Noncopyable &);  // 这不需要再其它地方实现
-		Noncopyable& operator =(const Noncopyable &);   // 这不需要再其它地方实现
-	}; // End of class def.
+		/** 不能复制类的基类，有任何的复制操作，编译器会报错.将深浅复制都写入父类的私有方法中，这样派生的子类也无法实现深浅复制
+		 *  例子：
+		 *
+		 *  \code
+		 *   class MyFancyClass : public openslam::utils::CNoncopyable
+		 *   {
+		 *    public:
+		 *     ...
+		 *   };
+		 *  \endcode
+		 * \ingroup openslam_base_grp
+		 */
+		class BASE_IMPEXP Noncopyable
+		{
+		protected:
+			Noncopyable() {}
+			~Noncopyable() {}
+		private:
+			Noncopyable(const Noncopyable &);  // 这不需要再其它地方实现
+			Noncopyable& operator =(const Noncopyable &);   // 这不需要再其它地方实现
+		}; // End of class def.
 
-} // end of namespace
-
+	} // end of namespace
+}// end of namespace
 #endif // OPENSLAM_BASE_NONCOPYABLE_H_

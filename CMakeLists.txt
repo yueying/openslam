@@ -38,10 +38,23 @@ if (ENABLE_SOLUTION_FOLDERS)
 endif (ENABLE_SOLUTION_FOLDERS)
 
 #添加libs
+SET(OpenCV_STATIC OFF)
 FIND_PACKAGE(OpenCV REQUIRED) #通过CMake系统添加OpenCV
-FIND_PACKAGE(g2o REQUIRED) #通过CMake系统添加g2o
+#FIND_PACKAGE(g2o REQUIRED) #通过CMake系统添加g2o
+#FIND_PACKAGE(Pangolin REQUIRED)
 
-include(cmake/script_eigen.cmake REQUIRED)  #添加Eigen
+#include(cmake/script_eigen.cmake REQUIRED)  #添加Eigen
+
+
+if(MSVC)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")  # 进行多核编译
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O1")
+endif()
+
+# 添加c++ 11标准支持
+if(MSVC AND (MSVC10 OR MSVC11 OR MSVC12))
+   set(COMPILER_SUPPORTS_CXX11 1)
+endif()
 
 #构建静态库还是动态库，目前先设置为静态库，后期更改为默认动态库
 SET(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)")
@@ -59,6 +72,7 @@ include(cmake/script_create_version_h.cmake REQUIRED)  # Build version.h
 #设置include和link路径
 INCLUDE_DIRECTORIES(".")#设置包含当前目录
 INCLUDE_DIRECTORIES(${OPENSLAM_CONFIG_FILE_INCLUDE_DIR})#包含全局配置文件config.h
+INCLUDE_DIRECTORIES(${Pangolin_INCLUDE_DIRS})
 LINK_DIRECTORIES("${CMAKE_BINARY_DIR}/lib")
 
 #设置路径，保存lib和bin到同一目录

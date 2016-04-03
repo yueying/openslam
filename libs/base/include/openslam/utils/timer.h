@@ -13,37 +13,37 @@
 #include <openslam/base/link_pragmas.h>
 #include <openslam/utils/noncopyable.h>
 
-namespace slam
+namespace openslam
 {
-
-	/** 这个类实现了一个高性能的秒表.
-	 *  精度 1e-6 seconds.
-	 * \ingroup fblib_base_grp
-	 */
-	class BASE_IMPEXP Timer : public Noncopyable
-	{
-	private:
-		unsigned char largeInts[64];
-	public:
-		/** 构造函数. */
-		Timer();
-
-		/** 析构函数. */
-		virtual ~Timer();
-
-		/** 启动码表
-		 * \sa Stop
+	namespace utils{
+		/** 这个类实现了一个高性能的秒表.
+		 *  精度 1e-6 seconds.
+		 * \ingroup fblib_base_grp
 		 */
-		void	Start();
+		class BASE_IMPEXP Timer : public Noncopyable
+		{
+		private:
+			unsigned char largeInts[64];
+		public:
+			/** 构造函数. */
+			Timer();
 
-		/** 停止秒表
-		 * \return 返回经过的时间，单位秒
-		 * \sa Start
-		 */
-		double	Stop();
+			/** 析构函数. */
+			virtual ~Timer();
 
-	}; // End of class def.
+			/** 启动码表
+			 * \sa Stop
+			 */
+			void	Start();
 
+			/** 停止秒表
+			 * \return 返回经过的时间，单位秒
+			 * \sa Start
+			 */
+			double	Stop();
+
+		}; // End of class def.
+	}
 } // End of namespace
 
 #endif // OPENSLAM_UTILS_TIMER_H_

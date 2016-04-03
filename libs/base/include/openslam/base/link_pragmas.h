@@ -19,7 +19,7 @@
 //  BASE_IMPEXP, OPENSLAM_xxx_EXPORTS
 
 // 通过下面宏的定义，我们可以对编译好的lib直接引用，不需要在链接器中添加名称:
-#if !defined(OPENSLAM_BASE_EXPORTS) && (defined(_MSC_VER))
+#if !defined(openslam_base_EXPORTS) && (defined(_MSC_VER))
 #	if defined(_DEBUG)
 #		pragma comment (lib, BOOST_JOIN( BOOST_JOIN("openslam_base",OPENSLAM_VERSION_POSTFIX),"d.lib"))
 #	else
@@ -48,7 +48,7 @@
 
 /* 通过宏BASE_IMPEXP 确定编译成dll，以及使用dll，或者不标识  */
 #if defined(OPENSLAM_BUILT_AS_DLL)
-#	if defined(OPENSLAM_BASE_EXPORTS)  /* 编译成dll */
+#	if defined(openslam_base_EXPORTS)  /* 编译成dll */
 #		define BASE_IMPEXP OPENSLAM_BASE_EXPORT
 #	else  /* 使用dll */
 #		define BASE_IMPEXP OPENSLAM_BASE_IMPORT
