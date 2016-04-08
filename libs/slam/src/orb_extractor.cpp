@@ -363,7 +363,13 @@ namespace openslam
 
 			feature_num_per_level_.resize(levels_num_);
 			float factor = 1.0f / scale_factor_;
-			float desired_features_per_scale = features_num_*(1 - factor) / (1 - (float)pow((double)factor, (double)levels_num_));
+			const float EPSINON = 0.000001;
+			float x = 1 - (float)pow((double)factor, (double)levels_num_);
+			float desired_features_per_scale = features_num_ / levels_num_;
+			if (abs(x) > EPSINON)//x不为0的时候执行，防止用户给出的尺度因子为1
+			{
+				desired_features_per_scale = features_num_*(1 - factor) / x;
+			}
 
 			int sum_features = 0;
 			for (int level = 0; level < levels_num_ - 1; level++)
