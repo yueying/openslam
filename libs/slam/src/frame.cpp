@@ -17,7 +17,7 @@ namespace openslam
 			// 获取尺度相关参数
 			levels_num_ = extractor_->getLevels();
 			scale_factor_ = extractor_->getScaleFactor();
-			// 帧初始化的进行特征检测
+			// 帧初始化的进行特征检测，初始化特征及特征数
 			extractORB(img);
 		}
 
