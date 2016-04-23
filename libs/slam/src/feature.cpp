@@ -13,7 +13,7 @@ namespace openslam
 {
 	namespace slam
 	{
-		Feature::Feature(Frame* frame, const cv::KeyPoint& keypoint, cv::Mat descriptor) :
+		Feature::Feature(Frame* frame, const cv::KeyPoint& keypoint, cv::Mat& descriptor) :
 			frame_(frame),
 			keypoint_(keypoint),
 			descriptor_(descriptor)

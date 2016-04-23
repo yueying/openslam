@@ -86,8 +86,10 @@ namespace openslam
 			std::vector<cv::Point> pattern_;//!<用于存放训练的模板
 
 			int features_num_;//!<最多提取的特征点的数量
-			float scale_factor_;//!<金字塔图像之间的尺度参数
 			int levels_num_;//!<高斯金字塔的层数
+			float scale_factor_;//!<金字塔图像之间的尺度参数
+			std::vector<float> vec_scale_factor_;//!<用于存储每层的尺度因子
+			
 			int default_fast_threshold_;//!<默认设置fast角点阈值20
 			int min_fast_threshold_;//!<设置fast角点阈值为9
 
@@ -95,7 +97,7 @@ namespace openslam
 
 			std::vector<int> umax_;//!< 用于存储计算特征方向时，图像每个v坐标对应最大的u坐标
 
-			std::vector<float> vec_scale_factor_;//!<用于存储每层的尺度因子
+			
 		};
 	}// namespace slam
 } //namespace openslam

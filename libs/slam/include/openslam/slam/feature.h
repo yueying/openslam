@@ -18,7 +18,7 @@ namespace openslam
 		class SLAM_IMPEXP Feature
 		{
 		public:
-			Feature(Frame* frame, const cv::KeyPoint& keypoint, cv::Mat descriptor);
+			Feature(Frame* frame, const cv::KeyPoint& keypoint, cv::Mat &descriptor);
 			~Feature();
 
 		private:
