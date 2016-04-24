@@ -37,13 +37,13 @@ int main(int argc, char *argv[])
 	Frame frame(cam, img, 0, extractor);
 	double time = timer.Stop();
 	std::cout << "Original time " << time<< std::endl;
-	std::cout << "frame keypoint num " << frame.keypoints_num_ << std::endl;
+	std::cout << "frame keypoint num " << frame.getKeypointsNum() << std::endl;
 	cv::Mat img_rgb(img.size(), CV_8UC3);
 	cv::cvtColor(img, img_rgb, CV_GRAY2RGB);
-	std::vector<Feature> cv_feats = frame.features_;
-	std::for_each(cv_feats.begin(), cv_feats.end(), [&](Feature i){
-		cv::circle(img_rgb, i.keypoint_.pt, 4 * (i.keypoint_.octave + 1), cv::Scalar(0, 255, 0), 1);
-		cv::circle(img_rgb, i.undistored_keypoint_.pt, 4 * (i.undistored_keypoint_.octave + 1), cv::Scalar(0, 0, 255), 1);
+	std::vector<Feature *> cv_feats = frame.features_;
+	std::for_each(cv_feats.begin(), cv_feats.end(), [&](Feature *i){
+		cv::circle(img_rgb, i->keypoint_.pt, 4 * (i->keypoint_.octave + 1), cv::Scalar(0, 255, 0), 1);
+		cv::circle(img_rgb, i->undistored_keypoint_.pt, 4 * (i->undistored_keypoint_.octave + 1), cv::Scalar(0, 0, 255), 1);
 	});
 	cv::imshow("Original", img_rgb);
 

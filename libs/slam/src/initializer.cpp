@@ -14,6 +14,9 @@ namespace openslam
 			max_iter_num_ = iterations;
 		}
 
+		Initializer::~Initializer()
+		{}
+
 		bool Initializer::addFirstFrame(FramePtr ref_frame)
 		{
 			ref_features_ = ref_frame->features_;
@@ -126,9 +129,15 @@ namespace openslam
 			cv::Mat K = cur_frame->cam_->cvK();
 			// 具体采用基础矩阵还是单应矩阵分解计算初始结构取决于ratio (0.40-0.45)
 			if (RH > 0.40)
-				return reconstructH(matches_inliers_H, H, K, R_cur_ref, t_cur_ref, init_3d_points, is_triangulated, 1.0, 50);
+			{
+				if (!reconstructH(matches_inliers_H, H, K, R_cur_ref, t_cur_ref, init_3d_points, is_triangulated, 1.0, 50))
+					return false;
+			}
 			else
-				return reconstructF(matches_inliers_F, F, K, R_cur_ref, t_cur_ref, init_3d_points, is_triangulated, 1.0, 50);
+			{
+				if (!reconstructF(matches_inliers_F, F, K, R_cur_ref, t_cur_ref, init_3d_points, is_triangulated, 1.0, 50))
+					return false;
+			}
 			
 			for (size_t i = 0, iend = init_matchex_.size(); i < iend; i++)
 			{
@@ -145,7 +154,6 @@ namespace openslam
 			cur_frame->T_f_w_ = Tcw;
 			return true;
 		}
-
 
 		void Initializer::findHomography(std::vector<bool> &matches_is_inliers, float &score, cv::Mat &H_cur_from_ref)
 		{
@@ -196,7 +204,6 @@ namespace openslam
 				}
 			}
 		}
-
 
 		void Initializer::findFundamental(std::vector<bool> &matches_is_inliers, float &score, cv::Mat &F21)
 		{
