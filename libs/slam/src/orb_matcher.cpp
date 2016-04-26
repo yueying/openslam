@@ -79,7 +79,7 @@ namespace openslam
 				// 确保最小距离小于阈值
 				if (best_dist <= TH_LOW)
 				{
-					// 再确保此最小距离乘以nn_ratio_要大于最小距离，主要防止可能次最小距离是匹配对象
+					// 再确保此最小距离乘以nn_ratio_要大于最小距离，主要确保该匹配比较鲁棒
 					if (best_dist < (float)best_dist2*nn_ratio_)
 					{
 						// 如果已经匹配，则说明当前特征已经有过对应，则就会有两个对应，移除该匹配

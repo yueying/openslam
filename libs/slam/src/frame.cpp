@@ -50,7 +50,7 @@ namespace openslam
 			if (keypoints_num_ == 0) return;
 
 			features_.reserve(keypoints_num_);
-			for (size_t i = 0; i < vec_keypoints.size();i++)
+			for (size_t i = 0; i < vec_keypoints.size(); i++)
 			{
 				Feature *fea = new Feature(this, vec_keypoints[i], descriptors.row(i));
 				features_.push_back(fea);
@@ -117,7 +117,7 @@ namespace openslam
 			}
 		}
 
-		std::vector<size_t> Frame::getFeaturesInArea(const float &x, const float  &y, 
+		std::vector<size_t> Frame::getFeaturesInArea(const float &x, const float  &y,
 			const float  &r, const int min_level, const int max_level) const
 		{
 			std::vector<size_t> indices;
@@ -156,7 +156,7 @@ namespace openslam
 						// 再次对尺度进一步检测
 						if (check_levels)
 						{
-							if (undistored_keypoint.octave<min_level)
+							if (undistored_keypoint.octave < min_level)
 								continue;
 							if (max_level >= 0)
 							{
