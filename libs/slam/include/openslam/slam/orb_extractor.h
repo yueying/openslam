@@ -79,6 +79,8 @@ namespace openslam
 			std::vector<cv::KeyPoint> distributeQuadTree(const std::vector<cv::KeyPoint>& vec_to_distribute_keys, const int &min_x,
 				const int &max_x, const int &min_y, const int &max_y, const int &feature_num, const int &level);
 
+			void computeKeyPointsOld(std::vector<std::vector<cv::KeyPoint> >& all_keypoints);
+
 		public:
 			std::vector<cv::Mat> vec_image_pyramid_;//!<图像金字塔
 

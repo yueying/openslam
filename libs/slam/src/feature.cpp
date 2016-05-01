@@ -16,7 +16,8 @@ namespace openslam
 		Feature::Feature(Frame* frame, const cv::KeyPoint& keypoint, cv::Mat& descriptor) :
 			frame_(frame),
 			keypoint_(keypoint),
-			descriptor_(descriptor)
+			descriptor_(descriptor),
+			map_point_(nullptr)
 		{
 			undistored_keypoint_ = keypoint_;
 			if (frame_!=nullptr)
@@ -42,6 +43,11 @@ namespace openslam
 
 			undistored_keypoint_.pt.x = mat.at<float>(0, 0);
 			undistored_keypoint_.pt.y = mat.at<float>(0, 1);
+		}
+
+		void Feature::addMapPointRef(MapPoint *map_point)
+		{
+			map_point_ = map_point;
 		}
 	}
 }

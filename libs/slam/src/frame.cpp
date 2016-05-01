@@ -10,23 +10,28 @@ namespace openslam
 		float Frame::min_bound_x_, Frame::min_bound_y_, Frame::max_bound_x_, Frame::max_bound_y_;
 		float Frame::grid_element_height_, Frame::grid_element_width_;
 
-		Frame::Frame(PinholeCamera* cam, const cv::Mat& img, double timestamp, ORBextractor* extractor) :
+		Frame::Frame(AbstractCamera* cam, const cv::Mat& img, double timestamp, 
+			ORBextractor* extractor, ORBVocabulary* voc,bool is_rgb_order) :
 			id_(frame_counter_++),
 			cam_(cam),
 			img_(img),
 			timestamp_(timestamp),
-			extractor_(extractor)
+			extractor_(extractor),
+			orb_vocabulary_(voc),
+			is_rgb_order_(is_rgb_order)
 		{
 			// 获取尺度相关参数
 			levels_num_ = extractor_->getLevels();
 			scale_factor_ = extractor_->getScaleFactor();
+			
+			prepareImage(img, gray_img_);
 			// 帧初始化的进行特征检测，初始化特征及特征数
-			extractORB(img);
+			extractORB(gray_img_);
 
 			// 主要用于第一次计算
 			if (is_initial_computations_)
 			{
-				computeImageBounds(img);
+				computeImageBounds(gray_img_);
 
 				grid_element_height_ = (max_bound_x_ - min_bound_x_) / static_cast<float>(FRAME_GRID_COLS);
 				grid_element_width_ = (max_bound_y_ - min_bound_y_) / static_cast<float>(FRAME_GRID_ROWS);
@@ -41,6 +46,26 @@ namespace openslam
 			std::for_each(features_.begin(), features_.end(), [&](Feature* i){delete i; });
 		}
 
+		void Frame::prepareImage(const cv::Mat& input_image, cv::Mat& gray_image)
+		{
+			gray_image = input_image;
+
+			if (gray_image.channels() == 3)
+			{
+				if (is_rgb_order_)
+					cvtColor(gray_image, gray_image, CV_RGB2GRAY);
+				else
+					cvtColor(gray_image, gray_image, CV_BGR2GRAY);
+			}
+			else if (gray_image.channels() == 4)
+			{
+				if (is_rgb_order_)
+					cvtColor(gray_image, gray_image, CV_RGBA2GRAY);
+				else
+					cvtColor(gray_image, gray_image, CV_BGRA2GRAY);
+			}
+		}
+
 		void Frame::extractORB(const cv::Mat &image)
 		{
 			std::vector<cv::KeyPoint> vec_keypoints;
@@ -52,8 +77,9 @@ namespace openslam
 			features_.reserve(keypoints_num_);
 			for (size_t i = 0; i < vec_keypoints.size(); i++)
 			{
+				// 这边内存释放放到析构中
 				Feature *fea = new Feature(this, vec_keypoints[i], descriptors.row(i));
-				features_.push_back(fea);
+				features_.push_back(fea);				
 			}
 		}
 
@@ -174,6 +200,26 @@ namespace openslam
 			}
 
 			return indices;
+		}
+
+		std::vector<cv::Mat> Frame::toDescriptorVector(const Features &features)
+		{
+			std::vector<cv::Mat> vec_desc;
+			int feature_size = features.size();
+			vec_desc.reserve(feature_size);
+			for (int j = 0; j < feature_size; j++)
+				vec_desc.push_back(features[j]->descriptor_);
+
+			return vec_desc;
+		}
+
+		void Frame::computeBoW()
+		{
+			if (bow_vec_.empty() || feat_vector_.empty())
+			{
+				std::vector<cv::Mat> current_desc = toDescriptorVector(features_);
+				orb_vocabulary_->transform(current_desc, bow_vec_, feat_vector_, 4);
+			}
 		}
 
 	}

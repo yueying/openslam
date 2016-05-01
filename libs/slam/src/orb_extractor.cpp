@@ -788,6 +788,186 @@ namespace openslam
 				computeOrientation(vec_image_pyramid_[level], all_keypoints[level], umax_);
 		}
 
+		void ORBextractor::computeKeyPointsOld(std::vector<std::vector<cv::KeyPoint> > &all_keypoints)
+		{
+			all_keypoints.resize(levels_num_);
+
+			float image_ratio = (float)vec_image_pyramid_[0].cols / vec_image_pyramid_[0].rows;
+
+			for (int level = 0; level < levels_num_; ++level)
+			{
+				// 每层待检测的特征数
+				const int desired_features = feature_num_per_level_[level];
+				// 根据每层待检测特征点的个数确定划分格子的行列数
+				const int level_cols = sqrt((float)desired_features / (5 * image_ratio));
+				const int level_rows = image_ratio*level_cols;
+
+				const int min_border_x = EDGE_THRESHOLD;
+				const int min_border_y = min_border_x;
+				const int max_border_x = vec_image_pyramid_[level].cols - EDGE_THRESHOLD;
+				const int max_border_y = vec_image_pyramid_[level].rows - EDGE_THRESHOLD;
+
+				const int border_width = max_border_x - min_border_x;
+				const int border_height = max_border_y - min_border_y;
+				// 得到每个格子的宽度和高度
+				const int cell_width = ceil((float)border_width / level_cols);
+				const int cell_height = ceil((float)border_height / level_rows);
+				// 分配的格子的数目
+				const int cells_num = level_rows*level_cols;
+				// 得到每个格子需检测的特征数
+				const int features_per_cell = ceil((float)desired_features / cells_num);
+				// 对应的每个格子的特征
+				std::vector<std::vector<std::vector<cv::KeyPoint> > > cell_keypoints(level_rows, std::vector<std::vector<cv::KeyPoint> >(level_cols));
+				// 用于存储每个格子保留的特征数
+				std::vector<std::vector<int> > to_retain_num(level_rows, std::vector<int>(level_cols, 0));
+				// 用于存储实际每个格子检测到的特征数
+				std::vector<std::vector<int> > total_num(level_rows, std::vector<int>(level_cols, 0));
+				// 用于标识特征数是否小于需求数
+				std::vector<std::vector<bool> > is_no_more(level_rows, std::vector<bool>(level_cols, false));
+				// 用于保存每次运算的时候下一次的像素坐标值
+				std::vector<int> ini_x_col(level_cols);
+				std::vector<int> ini_y_row(level_rows);
+				// 特征数不够的格子的个数
+				int no_more_num = 0;
+				// 特征缺少的个数
+				int to_distribute_num = 0;
+
+				// 加6是确保格子中的每个点都被检测到，默认opencv中FAST特征检测是9-16的，半径为3
+				float max_y = cell_height + 6;
+
+				for (int i = 0; i < level_rows; i++)
+				{
+					const float ini_y = min_border_y + i*cell_height - 3;
+					ini_y_row[i] = ini_y;
+
+					if (i == level_rows - 1)
+					{
+						max_y = max_border_y + 3 - ini_y;
+						if (max_y <= 0)
+							continue;
+					}
+
+					float max_x = cell_width + 6;
+
+					for (int j = 0; j < level_cols; j++)
+					{
+						float ini_x;
+
+						if (i == 0)
+						{
+							ini_x = min_border_x + j*cell_width - 3;
+							ini_x_col[j] = ini_x;
+						}
+						else
+						{
+							ini_x = ini_x_col[j];
+						}
+
+						if (j == level_cols - 1)
+						{
+							max_x = max_border_x + 3 - ini_x;
+							if (max_x <= 0)
+								continue;
+						}
+						// 对每个格子进行特征检测
+						cv::Mat cell_image = vec_image_pyramid_[level].rowRange(ini_y, ini_y + max_y).colRange(ini_x, ini_x + max_x);
+
+						cell_keypoints[i][j].reserve(features_per_cell * 5);
+
+						cv::FAST(cell_image, cell_keypoints[i][j], default_fast_threshold_, true);
+						// 如果特征个数较少，则降低阈值再一次检测
+						if (cell_keypoints[i][j].size() <= 3)
+						{
+							cell_keypoints[i][j].clear();
+							cv::FAST(cell_image, cell_keypoints[i][j], min_fast_threshold_, true);
+						}
+
+						const int keypoint_num = cell_keypoints[i][j].size();
+						total_num[i][j] = keypoint_num;
+
+						if (keypoint_num > features_per_cell)
+						{
+							to_retain_num[i][j] = features_per_cell;
+							is_no_more[i][j] = false;
+						}
+						else
+						{
+							to_retain_num[i][j] = keypoint_num;
+							to_distribute_num += features_per_cell - keypoint_num;
+							is_no_more[i][j] = true;
+							no_more_num++;
+						}
+
+					}
+				}
+				// 主要目的对特征再一次分配，确保特征数
+				while (to_distribute_num > 0 && no_more_num < cells_num)
+				{
+					// 确定新的格子中的特征数
+					int new_features_cell = features_per_cell + ceil((float)to_distribute_num / (cells_num - no_more_num));
+					to_distribute_num = 0;
+
+					for (int i = 0; i < level_rows; i++)
+					{
+						for (int j = 0; j<level_cols; j++)
+						{
+							if (!is_no_more[i][j])
+							{
+								if (total_num[i][j]>new_features_cell)
+								{
+									to_retain_num[i][j] = new_features_cell;
+									is_no_more[i][j] = false;
+								}
+								else
+								{
+									to_retain_num[i][j] = total_num[i][j];
+									to_distribute_num += new_features_cell - total_num[i][j];
+									is_no_more[i][j] = true;
+									no_more_num++;
+								}
+							}
+						}
+					}
+				}
+
+				std::vector<cv::KeyPoint> & keypoints = all_keypoints[level];
+				keypoints.reserve(desired_features * 2);
+
+				const int scaled_patch_size = PATCH_SIZE*vec_scale_factor_[level];
+				// 换算坐标，确定特征点，进行保存
+				for (int i = 0; i < level_rows; i++)
+				{
+					for (int j = 0; j<level_cols; j++)
+					{
+						std::vector<cv::KeyPoint> &keys_cell = cell_keypoints[i][j];
+						cv::KeyPointsFilter::retainBest(keys_cell, to_retain_num[i][j]);
+						if ((int)keys_cell.size()>to_retain_num[i][j])
+							keys_cell.resize(to_retain_num[i][j]);
+
+						for (size_t k = 0, kend = keys_cell.size(); k < kend; k++)
+						{
+							keys_cell[k].pt.x += ini_x_col[j];
+							keys_cell[k].pt.y += ini_y_row[i];
+							keys_cell[k].octave = level;
+							keys_cell[k].size = scaled_patch_size;
+							keypoints.push_back(keys_cell[k]);
+						}
+					}
+				}
+
+				if ((int)keypoints.size() > desired_features)
+				{
+					cv::KeyPointsFilter::retainBest(keypoints, desired_features);
+					keypoints.resize(desired_features);
+				}
+			}
+
+			// 计算方向
+			for (int level = 0; level < levels_num_; ++level)
+				computeOrientation(vec_image_pyramid_[level], all_keypoints[level], umax_);
+		}
+
+
 		static void computeDescriptors(const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors,
 			const std::vector<cv::Point>& pattern)
 		{
@@ -811,6 +991,7 @@ namespace openslam
 
 			std::vector < std::vector<cv::KeyPoint> > all_keypoints;
 			computeKeyPointsQuadTree(all_keypoints);
+			//computeKeyPointsOld(all_keypoints);
 
 			cv::Mat descriptors;
 

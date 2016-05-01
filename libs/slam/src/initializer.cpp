@@ -147,11 +147,33 @@ namespace openslam
 					nmatches--;
 				}
 			}
+			OPENSLAM_INFO << "after triangulated the matches num :" << nmatches << std::endl;
 			// 设置当前帧的位姿
 			cv::Mat Tcw = cv::Mat::eye(4, 4, CV_32F);
 			R_cur_ref.copyTo(Tcw.rowRange(0, 3).colRange(0, 3));
 			t_cur_ref.copyTo(Tcw.rowRange(0, 3).col(3));
 			cur_frame->T_f_w_ = Tcw;
+
+			//将三维点分配到map point
+			//创建map point分配到关键帧中
+			for (size_t i = 0; i < init_matchex_.size(); i++)
+			{
+				if (init_matchex_[i] < 0)
+					continue;
+
+				cv::Mat world_pos(init_3d_points[i]);//三角定位得到的世界坐标系中的点
+				//将初始化得到的3d点创建 MapPoint.这边内存释放放到map中,将点与特征进行关联
+				MapPoint* map_point = new MapPoint(world_pos);
+				Feature *ref_feat = ref_features_[i];
+				Feature *cur_feat = cur_features_[init_matchex_[i]];
+				ref_feat->addMapPointRef(map_point);
+				cur_feat->addMapPointRef(map_point);
+				map_point->addFeatureRef(ref_feat);
+				map_point->addFeatureRef(cur_feat);
+				map_point->computeDistinctiveDescriptors();
+				
+			}
+			
 			return true;
 		}
 
@@ -253,7 +275,6 @@ namespace openslam
 				}
 			}
 		}
-
 
 		cv::Mat Initializer::calcHFromMatches(const std::vector<cv::Point2f> &points_ref, const std::vector<cv::Point2f> &points_cur)
 		{
@@ -860,7 +881,6 @@ namespace openslam
 			T.at<float>(0, 2) = -mean_x*scale_x;
 			T.at<float>(1, 2) = -mean_y*scale_y;
 		}
-
 
 		int Initializer::checkRt(const cv::Mat &R, const cv::Mat &t,
 			const std::vector<Feature *> &vec_features1, const std::vector<Feature *> &vec_features2,

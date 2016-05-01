@@ -10,6 +10,7 @@
 #ifndef OPENSLAM_SLAM_FEATURE_H_
 #define OPENSLAM_SLAM_FEATURE_H_
 #include <openslam/slam/frame.h>
+#include <openslam/slam/map_point.h>
 
 namespace openslam
 {
@@ -20,7 +21,9 @@ namespace openslam
 		public:
 			Feature(Frame* frame, const cv::KeyPoint& keypoint, cv::Mat &descriptor);
 			~Feature();
-
+			/** 添加特征对应的map point
+			*/
+			void addMapPointRef(MapPoint *map_point);
 		private:
 			void undistortKeyPoint();
 		public:
@@ -28,6 +31,7 @@ namespace openslam
 			cv::KeyPoint   keypoint_;           //!< 每个特征对应的特征点
 			cv::KeyPoint   undistored_keypoint_;//!< 进行畸变矫正之后的特征点
 			cv::Mat        descriptor_;         //!< 每个特征对应的特征描述
+			MapPoint*      map_point_;          //!< 指针指向跟特征对应的3D点
 		
 		};
 	}

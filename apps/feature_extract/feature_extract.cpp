@@ -4,6 +4,7 @@
 #include <openslam/slam/orb_extractor.h>
 #include <openslam/slam/frame.h>
 #include <openslam/slam/feature.h>
+#include <openslam/slam/monocular_camera.h>
 
 using namespace openslam::utils;
 using namespace openslam::slam;
@@ -29,10 +30,10 @@ int main(int argc, char *argv[])
 	assert(img.type() == CV_8UC1 && !img.empty());
 	
 
-	PinholeCamera *cam = new PinholeCamera(640.0, 480.0,
+	AbstractCamera *cam = new MonocularCamera(640.0, 480.0,
 		517.306408, 516.469215, 318.643040, 255.313989,
 		0.262383, -0.953104, -0.005358, 0.002628, 1.163314);
-	ORBextractor *extractor = new ORBextractor();
+	ORBextractor *extractor = new ORBextractor(2000);
 	Timer timer;
 	Frame frame(cam, img, 0, extractor);
 	double time = timer.Stop();

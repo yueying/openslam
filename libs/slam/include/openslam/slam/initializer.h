@@ -79,7 +79,7 @@ namespace openslam
 			std::vector<int> init_matchex_;//!<初始的匹配
 			std::vector<cv::Point2f> prev_matched_;//!<预先匹配点，也就是参考帧特征点的位置
 
-			std::vector<std::vector<size_t> > ransac_sets_;
+			std::vector<std::vector<size_t> > ransac_sets_;//!<构建8点的随机数据集
 		};
 	}
 }
