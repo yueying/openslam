@@ -1,6 +1,7 @@
 #include <openslam/slam/system.h>
 #include <openslam/utils/notify.h>
 #include <openslam/utils/timer.h>
+#include <openslam/slam/tracking_mono.h>
 
 namespace openslam
 {
@@ -35,10 +36,29 @@ namespace openslam
 				exit(-1);
 			}
 			OPENSLAM_INFO << "Vocabulary loaded in " << timer.Stop() << "s" << std::endl;
+
+			//根据不同的传感器实例化不同的类
+			switch (input_sensor_)
+			{
+			case SENSOR_MONOCULAR:
+				tracker_ = new TrackingMono(settings_file_name, orb_vocabulary_);
+				break;
+			case SENSOR_STEREO:
+				break;
+			case SENSOR_RGBD:
+				break;
+			default:
+				break;
+			}
 		}
 		System::~System()
 		{
 
+		}
+
+		void System::addImage(const cv::Mat& img, double timestamp)
+		{
+			tracker_->addImage(img, timestamp);
 		}
 	}
 }

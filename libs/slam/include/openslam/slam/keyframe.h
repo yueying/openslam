@@ -13,6 +13,9 @@ namespace openslam
 			KeyFrame();
 			~KeyFrame();
 
+		public:
+
+
 		};
 
 		typedef std::shared_ptr<KeyFrame> KeyFramePtr;

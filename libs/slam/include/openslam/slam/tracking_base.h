@@ -38,8 +38,10 @@ namespace openslam
 			/**不同的传感器初始化不一致*/
 			virtual void initialize() = 0;
 
+			/**输入一幅图像，给单目的接口*/
+			virtual void addImage(const cv::Mat& img, double timestamp) = 0;
 		protected:
-			Map  *map_;
+			Map  map_;
 			ORBVocabulary *orb_vocabulary_;
 
 		};

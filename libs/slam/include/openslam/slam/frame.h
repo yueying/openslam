@@ -45,10 +45,6 @@ namespace openslam
 			*/
 			void addFeature(Feature* ftr);
 
-			/** 得到关键点个数据
-			*/
-			int getKeypointsNum(){ return keypoints_num_; }
-
 			/** \brief 将特征限制到某个区域内，更方便进行特征匹配
 			*/
 			std::vector<size_t> getFeaturesInArea(const float &x, const float  &y, const float  &r, const int min_level = -1, const int max_level = -1) const;
@@ -56,6 +52,22 @@ namespace openslam
 			/** 将描述子转成BoW的单词表示
 			*/
 			void computeBoW();
+
+			/** 返回帧对应的相机的位置
+			*/
+			cv::Mat getCameraCenter();
+
+			/** 用于得到金字塔图像的每层尺度值
+			*/
+			std::vector<float> getScaleFactors();
+			/** 得到金字塔的层数
+			*/
+			inline int getLevelsNum(){ return levels_num_; }
+
+			/** 得到关键点个数据
+			*/
+			inline int getKeypointsNum(){ return keypoints_num_; }
+
 		protected:
 			/**\brief图像进行预处理，将彩色图像转灰度
 			*/
@@ -88,8 +100,7 @@ namespace openslam
 			cv::Mat                      img_;          //!< 帧对应的原始图像
 			cv::Mat                      gray_img_;     //!< 帧对应的灰度图像
 			bool                         is_rgb_order_; //!< 图像顺序，true图像是RGB的顺序，false是BGR的顺序
-			float                        scale_factor_; //!< 对应金字塔图像的尺度因子
-			int                          levels_num_;   //!< 对应金字塔的层数
+			float                        scale_factor_; //!< 对应金字塔图像的尺度因子		
 			Features                     features_;     //!< 帧对应的特征
 			cv::Mat                      T_f_w_;        //!< 从世界坐标系(w)orld转到摄像机坐标系(f)rame，刚性变换Rt
 			ORBextractor*                extractor_;    //!< 把特征提取放到帧中
@@ -111,6 +122,7 @@ namespace openslam
 
 		protected:
 			int                          keypoints_num_;//!< 特征点的个数
+			int                          levels_num_;   //!< 对应金字塔的层数
 		};
 
 		typedef std::shared_ptr<Frame> FramePtr;

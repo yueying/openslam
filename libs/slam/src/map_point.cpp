@@ -1,15 +1,17 @@
 #include <openslam/slam/map_point.h>
 #include <openslam/slam/feature.h>
 #include <openslam/slam/orb_matcher.h>
+#include <openslam/utils/notify.h>
 
 namespace openslam
 {
 	namespace slam
 	{
 		long unsigned int MapPoint::map_point_counter_ = 0;
-		MapPoint::MapPoint(const cv::Mat &pos):
+		MapPoint::MapPoint(const cv::Mat &pos,Feature * cur_obs) :
 			id_(map_point_counter_++),
 			world_position_(pos), 
+			cur_obs_(cur_obs),
 			obs_num_(0)
 		{
 			normal_vector_ = cv::Mat::zeros(3, 1, CV_32F);
@@ -90,5 +92,55 @@ namespace openslam
 				descriptor_ = vec_descriptors[best_index].clone();
 			}
 		}
+
+		void MapPoint::updateNormalAndDepth()
+		{
+			std::list<Feature*>   obs;
+			cv::Mat pos;// map point 在世界坐标系中的位置
+			Feature * cur_obs;
+			{
+				std::unique_lock<mutex> lock1(mutex_features_);
+				std::unique_lock<mutex> lock2(mutex_position_);
+				obs = obs_;
+				cur_obs = cur_obs_;
+				pos = world_position_.clone();
+			}
+
+			if (obs.empty())
+			{
+				OPENSLAM_INFO << "this map point has no feature! " << std::endl;
+				return;
+			}
+
+			cv::Mat normal = cv::Mat::zeros(3, 1, CV_32F);
+			int n = 0;
+			for (auto it = obs_.begin(), ite = obs_.end(); it != ite; ++it)
+			{
+				cv::Mat Owi = (*it)->frame_->getCameraCenter();
+				cv::Mat normali = world_position_ - Owi;
+				normal = normal + normali / cv::norm(normali);//将所有map point指向关键帧对应的相机中心的向量进行归一化后相加求均值，用来表示当前map point的法向量
+				n++;
+			}
+			Frame * cur_frame = cur_obs->frame_;
+			cv::Mat PC = pos - cur_frame->getCameraCenter();
+			const float dist = cv::norm(PC);// 用当前帧来计算目前map point的深度
+			// 获得map point 对应当前帧的特征索引所在金字塔层数-> 
+			const int level = cur_obs->undistored_keypoint_.octave;
+			// 获得所在层数的尺度因子
+			std::vector<float> scale_factors = cur_frame->getScaleFactors();
+			const float level_scale_factor = scale_factors[level];
+			// 获得金字塔的层数
+			const int levels_num = cur_frame->getLevelsNum();
+
+			{
+				std::unique_lock<mutex> lock3(mutex_position_);
+				// 最大距离和最小距离的计算
+				max_distance_ = dist*level_scale_factor;
+				min_distance_ = max_distance_ / scale_factors[levels_num - 1];
+				normal_vector_ = normal / n;
+			}
+		}
+
+
 	}
 }

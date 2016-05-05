@@ -46,6 +46,26 @@ namespace openslam
 			std::for_each(features_.begin(), features_.end(), [&](Feature* i){delete i; });
 		}
 
+		cv::Mat Frame::getCameraCenter()
+		{
+			cv::Mat Rfw = T_f_w_.rowRange(0, 3).colRange(0, 3);
+			cv::Mat tfw = T_f_w_.rowRange(0, 3).col(3);
+			cv::Mat Ow = -Rfw.t()*tfw;
+			return Ow;
+		}
+
+		std::vector<float> Frame::getScaleFactors()
+		{
+			std::vector<float> vec_scale_factor;
+			vec_scale_factor.resize(levels_num_);
+			vec_scale_factor[0] = 1.0f;
+			for (int i = 1; i < levels_num_; i++)
+			{
+				vec_scale_factor[i] = vec_scale_factor[i - 1] * scale_factor_;
+			}
+			return vec_scale_factor;
+		}
+
 		void Frame::prepareImage(const cv::Mat& input_image, cv::Mat& gray_image)
 		{
 			gray_image = input_image;

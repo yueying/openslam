@@ -25,6 +25,7 @@ namespace openslam
 			/**输入图像，得到结果*/
 			void addImage(const cv::Mat& img, double timestamp);
 
+			
 		protected:
 			Sensor input_sensor_;//!<输入传感器
 			ORBVocabulary* orb_vocabulary_;//!< 放在这边用于导入词汇表

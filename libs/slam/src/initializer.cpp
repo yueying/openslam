@@ -17,8 +17,15 @@ namespace openslam
 		Initializer::~Initializer()
 		{}
 
+		void Initializer::reset()
+		{
+			ref_features_.clear();
+			ref_frame_.reset();
+		}
+
 		bool Initializer::addFirstFrame(FramePtr ref_frame)
 		{
+			reset();
 			ref_features_ = ref_frame->features_;
 			if (ref_features_.size() < 100)
 			{
@@ -163,15 +170,16 @@ namespace openslam
 
 				cv::Mat world_pos(init_3d_points[i]);//三角定位得到的世界坐标系中的点
 				//将初始化得到的3d点创建 MapPoint.这边内存释放放到map中,将点与特征进行关联
-				MapPoint* map_point = new MapPoint(world_pos);
 				Feature *ref_feat = ref_features_[i];
 				Feature *cur_feat = cur_features_[init_matchex_[i]];
+				MapPoint* map_point = new MapPoint(world_pos, cur_feat);			
 				ref_feat->addMapPointRef(map_point);
 				cur_feat->addMapPointRef(map_point);
 				map_point->addFeatureRef(ref_feat);
 				map_point->addFeatureRef(cur_feat);
 				map_point->computeDistinctiveDescriptors();
-				
+				map_point->updateNormalAndDepth();
+				///这样就完成添加map point与特征的对应
 			}
 			
 			return true;

@@ -32,6 +32,7 @@ namespace openslam
 			bool addFirstFrame(FramePtr ref_frame);
 			bool addSecondFrame(FramePtr cur_frame);
 
+			void reset();
 		private:
 
 			void findHomography(std::vector<bool> &matches_is_inliers, float &score, cv::Mat &H_cur_from_ref);
