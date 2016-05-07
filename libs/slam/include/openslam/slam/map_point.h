@@ -18,6 +18,10 @@ namespace openslam
 		public:
 			MapPoint(const cv::Mat &pos, Feature * cur_obs);
 			~MapPoint();
+			/** \brief map point 在世界坐标系中的位置
+			*/
+			cv::Mat getWorldPosition();
+
 			/**添加观测到的对应特征*/
 			void addFeatureRef(Feature* ftr);
 

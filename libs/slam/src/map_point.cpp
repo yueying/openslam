@@ -17,6 +17,12 @@ namespace openslam
 			normal_vector_ = cv::Mat::zeros(3, 1, CV_32F);
 		}
 
+		cv::Mat MapPoint::getWorldPosition()
+		{
+			std::unique_lock<mutex> lock(mutex_position_);
+			return world_position_.clone();
+		}
+
 		void MapPoint::addFeatureRef(Feature* ftr)
 		{
 			obs_.push_front(ftr);
