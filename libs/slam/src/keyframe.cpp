@@ -4,8 +4,10 @@ namespace openslam
 {
 	namespace slam
 	{
-		KeyFrame::KeyFrame()
+		long unsigned int KeyFrame::keyframe_counter_ = 0;
+		KeyFrame::KeyFrame(const Frame &frame) :Frame(frame)
 		{
+			keyframe_id_ = keyframe_counter_++;
 		}
 
 		KeyFrame::~KeyFrame()

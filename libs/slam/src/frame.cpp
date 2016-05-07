@@ -10,8 +10,8 @@ namespace openslam
 		float Frame::min_bound_x_, Frame::min_bound_y_, Frame::max_bound_x_, Frame::max_bound_y_;
 		float Frame::grid_element_height_, Frame::grid_element_width_;
 
-		Frame::Frame(AbstractCamera* cam, const cv::Mat& img, double timestamp, 
-			ORBextractor* extractor, ORBVocabulary* voc,bool is_rgb_order) :
+		Frame::Frame(AbstractCamera* cam, const cv::Mat& img, double timestamp,
+			ORBextractor* extractor, ORBVocabulary* voc, bool is_rgb_order) :
 			id_(frame_counter_++),
 			cam_(cam),
 			img_(img),
@@ -23,7 +23,7 @@ namespace openslam
 			// 获取尺度相关参数
 			levels_num_ = extractor_->getLevels();
 			scale_factor_ = extractor_->getScaleFactor();
-			
+
 			prepareImage(img, gray_img_);
 			// 帧初始化的进行特征检测，初始化特征及特征数
 			extractORB(gray_img_);
@@ -41,6 +41,30 @@ namespace openslam
 			assignFeaturesToGrid();
 		}
 
+		Frame::Frame(const Frame &frame) :
+			id_(frame.id_),
+			timestamp_(frame.timestamp_),
+			cam_(frame.cam_),
+			img_(frame.img_.clone()),
+			gray_img_(frame.gray_img_.clone()),
+			is_rgb_order_(frame.is_rgb_order_),
+			scale_factor_(frame.scale_factor_),
+			Tcw_(frame.Tcw_.clone()),
+			extractor_(frame.extractor_),
+			orb_vocabulary_(frame.orb_vocabulary_),
+			bow_vec_(frame.bow_vec_),
+			feat_vector_(frame.feat_vector_),
+			keypoints_num_(frame.keypoints_num_),
+			levels_num_(frame.levels_num_)
+		{
+			for (int i = 0; i < FRAME_GRID_COLS; i++)
+				for (int j = 0; j < FRAME_GRID_ROWS; j++)
+					grid_[i][j] = frame.grid_[i][j];
+			// 提供特征拷贝
+			std::for_each(frame.features_.begin(), frame.features_.end(), [&](Feature* i)
+			{Feature *tem = new Feature(*i); features_.clear(); features_.push_back(tem); });
+		}
+
 		Frame::~Frame()
 		{
 			std::for_each(features_.begin(), features_.end(), [&](Feature* i){delete i; });
@@ -48,8 +72,8 @@ namespace openslam
 
 		cv::Mat Frame::getCameraCenter()
 		{
-			cv::Mat Rfw = T_f_w_.rowRange(0, 3).colRange(0, 3);
-			cv::Mat tfw = T_f_w_.rowRange(0, 3).col(3);
+			cv::Mat Rfw = Tcw_.rowRange(0, 3).colRange(0, 3);
+			cv::Mat tfw = Tcw_.rowRange(0, 3).col(3);
 			cv::Mat Ow = -Rfw.t()*tfw;
 			return Ow;
 		}
@@ -99,7 +123,7 @@ namespace openslam
 			{
 				// 这边内存释放放到析构中
 				Feature *fea = new Feature(this, vec_keypoints[i], descriptors.row(i));
-				features_.push_back(fea);				
+				features_.push_back(fea);
 			}
 		}
 

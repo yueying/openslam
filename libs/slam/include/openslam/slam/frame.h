@@ -69,6 +69,8 @@ namespace openslam
 			inline int getKeypointsNum(){ return keypoints_num_; }
 
 		protected:
+			/**提供帧数据向关键帧数据的拷贝，不允许自身拷贝*/
+			Frame(const Frame &frame);
 			/**\brief图像进行预处理，将彩色图像转灰度
 			*/
 			void prepareImage(const cv::Mat& input_image, cv::Mat& gray_image);
@@ -102,7 +104,7 @@ namespace openslam
 			bool                         is_rgb_order_; //!< 图像顺序，true图像是RGB的顺序，false是BGR的顺序
 			float                        scale_factor_; //!< 对应金字塔图像的尺度因子		
 			Features                     features_;     //!< 帧对应的特征
-			cv::Mat                      T_f_w_;        //!< 从世界坐标系(w)orld转到摄像机坐标系(f)rame，刚性变换Rt
+			cv::Mat                      Tcw_;        //!< 从世界坐标系(w)orld转到摄像机坐标系(f)rame，刚性变换Rt
 			ORBextractor*                extractor_;    //!< 把特征提取放到帧中
 
 			// Bag of Words Vector structures.

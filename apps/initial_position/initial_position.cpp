@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	Initializer init;
 	init.addFirstFrame(fisrt_frame);
 	init.addSecondFrame(second_frame);
-	std::cout << second_frame->T_f_w_ << std::endl;
+	std::cout << second_frame->Tcw_ << std::endl;
 	delete extractor;
 	delete cam;
 	return 0;

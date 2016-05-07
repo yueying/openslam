@@ -39,7 +39,7 @@ namespace openslam
 			std::fill(init_matchex_.begin(), init_matchex_.end(), -1);
 			// 赋值给属性并设置初始位姿
 			ref_frame_ = ref_frame;
-			ref_frame_->T_f_w_ = cv::Mat::eye(4, 4, CV_32F);
+			ref_frame_->Tcw_ = cv::Mat::eye(4, 4, CV_32F);
 			return true;
 		}
 
@@ -159,7 +159,7 @@ namespace openslam
 			cv::Mat Tcw = cv::Mat::eye(4, 4, CV_32F);
 			R_cur_ref.copyTo(Tcw.rowRange(0, 3).colRange(0, 3));
 			t_cur_ref.copyTo(Tcw.rowRange(0, 3).col(3));
-			cur_frame->T_f_w_ = Tcw;
+			cur_frame->Tcw_ = Tcw;
 
 			//将三维点分配到map point
 			//创建map point分配到关键帧中

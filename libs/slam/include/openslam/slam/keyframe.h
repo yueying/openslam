@@ -10,11 +10,12 @@ namespace openslam
 		class SLAM_IMPEXP KeyFrame : public Frame
 		{
 		public:
-			KeyFrame();
+			KeyFrame(const Frame &frame);
 			~KeyFrame();
 
 		public:
-
+			static long unsigned int keyframe_counter_;//!< 创建关键帧的计数器，用于设置帧的唯一id
+			long unsigned int keyframe_id_;//!< 关键帧的唯一id
 
 		};
 

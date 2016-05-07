@@ -86,7 +86,7 @@ namespace openslam
 			is_success = initializer_.addFirstFrame(new_frame_);
 			if (is_success)//如果初始化成功，则将当前帧转为关键帧，并计算BoW
 			{
-				KeyFramePtr init_keyframe = std::static_pointer_cast<KeyFrame>(new_frame_);
+				KeyFramePtr init_keyframe = std::make_shared<KeyFrame>(*new_frame_);
 				init_keyframe->computeBoW();
 				//插入关键帧到地图中
 				map_.addKeyframe(init_keyframe);
@@ -101,7 +101,7 @@ namespace openslam
 			is_success = initializer_.addSecondFrame(new_frame_);
 			if (is_success)//如果初始化成功，则将当前帧转为关键帧，并计算BoW
 			{
-				KeyFramePtr second_keyframe = std::static_pointer_cast<KeyFrame>(new_frame_);
+				KeyFramePtr second_keyframe = std::make_shared<KeyFrame>(*new_frame_);
 				second_keyframe->computeBoW();
 				//插入关键帧到地图中
 				map_.addKeyframe(second_keyframe);
