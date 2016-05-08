@@ -18,9 +18,14 @@ namespace openslam
 		public:
 			MapPoint(const cv::Mat &pos, Feature * cur_obs);
 			~MapPoint();
+
 			/** \brief map point 在世界坐标系中的位置
 			*/
 			cv::Mat getWorldPosition();
+
+			/** \brief 设置map point 在世界坐标系中的位置
+			*/
+			void setWorldPosition(const cv::Mat &pos);
 
 			/**添加观测到的对应特征*/
 			void addFeatureRef(Feature* ftr);
@@ -33,6 +38,15 @@ namespace openslam
 			*/
 			void updateNormalAndDepth();
 
+			/**用于设置该mappoint是否有问题*/
+			void setBadFlag();
+
+			/**用于获取该mapoint是否有问题*/
+			bool isBad();
+
+			/**用于获得观测到该map point的关键帧的个数*/
+			int observations();
+
 		public:
 			long unsigned int id_;                                   //!< 点唯一的id
 			static long unsigned int map_point_counter_;             //!< 创建点的计数，用于设置唯一的id
@@ -40,12 +54,17 @@ namespace openslam
 			cv::Mat normal_vector_;                                  //!<平均观测方向
 			std::list<Feature*>   obs_;                              //!< 对应这个点的所有特征
 			Feature * cur_obs_;//!<对应这个map point 的当前特征
-			int obs_num_;                                            //!< 观察到该map point的关键帧的个数
+			
 			std::mutex mutex_features_;//!< 对点对应的特征读写进行控制
 			std::mutex mutex_position_;//!< 对点对应的位置进行读写控制
 			cv::Mat descriptor_;//!<得到该map point 对应的最好描述子（与其他关键帧对该点的描述距离较小）
 			float min_distance_;//!<尺度不变，有效观察距离最小值
 			float max_distance_;//!<尺度不变，有效观察距离最大值
+			
+			static std::mutex global_mutex_;
+		protected:
+			int obs_num_;                                            //!< 观察到该map point的关键帧的个数
+			bool is_bad_;//!<用于设置该map point是否有效
 		};
 
 	}

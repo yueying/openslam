@@ -68,6 +68,10 @@ namespace openslam
 			*/
 			inline int getKeypointsNum(){ return keypoints_num_; }
 
+			/**得到相机外参*/
+			inline cv::Mat getCameraExternal() { return Tcw_; }
+
+			inline void setCameraExternal(cv::Mat &Tcw) { Tcw_ = Tcw; }
 		protected:
 			/**提供帧数据向关键帧数据的拷贝，不允许自身拷贝*/
 			Frame(const Frame &frame);

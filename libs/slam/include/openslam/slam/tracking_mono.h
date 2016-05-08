@@ -47,6 +47,7 @@ namespace openslam
 			Initializer initializer_;//!<主要用于单目slam 的初始化
 			FramePtr  new_frame_;                          //!< 当前帧
 			bool is_rgb_order_;//!<图像顺序，true图像是RGB的顺序，false是BGR的顺序
+			KeyFramePtr init_keyframe_;//!< 初始关键帧
 		};
 	}
 }

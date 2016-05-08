@@ -41,8 +41,12 @@ namespace openslam
 			/**输入一幅图像，给单目的接口*/
 			virtual void addImage(const cv::Mat& img, double timestamp) = 0;
 		protected:
-			Map  map_;
+			TrackingState tracking_state_;//!<表示设置的跟踪状态
+			Map  *map_;
 			ORBVocabulary *orb_vocabulary_;
+			bool is_only_tracking_;//!< 如果是true,则表明只执行定位
+			bool is_vo_;
+			cv::Mat motion_model_;
 
 		};
 	}

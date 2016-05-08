@@ -43,7 +43,7 @@ FIND_PACKAGE(OpenCV REQUIRED) #通过CMake系统添加OpenCV
 #FIND_PACKAGE(g2o REQUIRED) #通过CMake系统添加g2o
 #FIND_PACKAGE(Pangolin REQUIRED)
 
-#include(cmake/script_eigen.cmake REQUIRED)  #添加Eigen
+include(cmake/script_eigen.cmake REQUIRED)  #添加Eigen
 
 
 if(MSVC)

@@ -8,11 +8,14 @@ namespace openslam
 	namespace slam
 	{
 		long unsigned int MapPoint::map_point_counter_ = 0;
+		std::mutex MapPoint::global_mutex_;
+
 		MapPoint::MapPoint(const cv::Mat &pos,Feature * cur_obs) :
 			id_(map_point_counter_++),
 			world_position_(pos), 
 			cur_obs_(cur_obs),
-			obs_num_(0)
+			obs_num_(0),
+			is_bad_(false)
 		{
 			normal_vector_ = cv::Mat::zeros(3, 1, CV_32F);
 		}
@@ -21,6 +24,13 @@ namespace openslam
 		{
 			std::unique_lock<mutex> lock(mutex_position_);
 			return world_position_.clone();
+		}
+
+		void MapPoint::setWorldPosition(const cv::Mat &pos)
+		{
+			std::unique_lock<mutex> lock2(global_mutex_);
+			std::unique_lock<mutex> lock(mutex_position_);
+			pos.copyTo(world_position_);
 		}
 
 		void MapPoint::addFeatureRef(Feature* ftr)
@@ -147,6 +157,27 @@ namespace openslam
 			}
 		}
 
+		void MapPoint::setBadFlag()
+		{
+			{
+				std::unique_lock<mutex> lock1(mutex_features_);
+				std::unique_lock<mutex> lock2(mutex_position_);
+				is_bad_ = true;
+			}
+		}
+
+		bool MapPoint::isBad()
+		{
+			std::unique_lock<mutex> lock(mutex_features_);
+			std::unique_lock<mutex> lock2(mutex_position_);
+			return is_bad_;
+		}
+
+		int MapPoint::observations()
+		{
+			std::unique_lock<mutex> lock(mutex_features_);
+			return obs_num_;
+		}
 
 	}
 }

@@ -6,7 +6,7 @@ namespace openslam
 	namespace slam
 	{
 		long unsigned int KeyFrame::keyframe_counter_ = 0;
-		KeyFrame::KeyFrame(const Frame &frame) :Frame(frame)
+		KeyFrame::KeyFrame(const Frame &frame) :Frame(frame), is_bad_(false)
 		{
 			keyframe_id_ = keyframe_counter_++;
 		}
@@ -44,6 +44,57 @@ namespace openslam
 			}
 			std::sort(vec_depths.begin(), vec_depths.end());
 			return vec_depths[(vec_depths.size() - 1) / 2];
+		}
+
+		int KeyFrame::trackedMapPoints(const int &min_obs)
+		{
+			std::unique_lock<mutex> lock(mutex_features_);
+
+			int points_num = 0;
+			const bool check_obs = min_obs > 0;
+			for (int i = 0; i < keypoints_num_; i++)
+			{
+				MapPoint* map_point = features_[i]->map_point_;
+				if (map_point)
+				{
+					if (!map_point->isBad())
+					{
+						if (check_obs)
+						{
+							if (map_point->observations() >= min_obs)
+								points_num++;
+						}
+						else
+							points_num++;
+					}
+				}
+			}
+
+			return points_num;
+		}
+
+		void KeyFrame::setBadFlag()
+		{
+			std::unique_lock<mutex> lock(mutex_connections_);
+			is_bad_ = true;
+		}
+
+		bool KeyFrame::isBad()
+		{
+			std::unique_lock<mutex> lock(mutex_connections_);
+			return is_bad_;
+		}
+
+		std::vector<MapPoint*> KeyFrame::getMapPointMatches()
+		{
+			std::unique_lock<mutex> lock(mutex_features_);
+			std::vector<MapPoint*>  vec_map_points;
+			for (int i = 0; i < keypoints_num_; i++)
+			{
+				MapPoint* map_point = features_[i]->map_point_;
+				vec_map_points.push_back(map_point);
+			}
+			return vec_map_points;
 		}
 	}
 }

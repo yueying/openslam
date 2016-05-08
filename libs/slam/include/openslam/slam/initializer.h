@@ -68,16 +68,18 @@ namespace openslam
 
 		public:
 			FramePtr ref_frame_;//!<初始参考帧
+			std::vector<int> init_matchex_;//!<初始的匹配
+			std::vector<cv::Point3f> init_3d_points_;//!<初始化得到的3d点
+			std::vector<Feature *> ref_features_;//!<参考帧中的特征
+			std::vector<Feature *> cur_features_;//!<当前帧中的特征
 
 		protected:
 			float sigma_;//!< 标准差
 			int max_iter_num_;//!<RANSAC 最大迭代次数
-			std::vector<Feature *> ref_features_;//!<参考帧中的特征
-			std::vector<Feature *> cur_features_;//!<当前帧中的特征
+			
 			std::vector<Match> matches_ref_cur_;//!<当前匹配，表示参考帧对当前帧
 			std::vector<bool> is_matched_ref_;//!<用于表示参考帧是否已匹配
-
-			std::vector<int> init_matchex_;//!<初始的匹配
+		
 			std::vector<cv::Point2f> prev_matched_;//!<预先匹配点，也就是参考帧特征点的位置
 
 			std::vector<std::vector<size_t> > ransac_sets_;//!<构建8点的随机数据集

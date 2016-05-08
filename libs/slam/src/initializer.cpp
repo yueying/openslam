@@ -131,18 +131,17 @@ namespace openslam
 
 			cv::Mat R_cur_ref; //当前相机的旋转,相对于上一帧，上一帧为初始帧姿态为I单位阵
 			cv::Mat t_cur_ref; // 当前相机的平移
-			std::vector<cv::Point3f> init_3d_points;
 			std::vector<bool> is_triangulated; // 初始化匹配当中，三角定位是否成功
 			cv::Mat K = cur_frame->cam_->cvK();
 			// 具体采用基础矩阵还是单应矩阵分解计算初始结构取决于ratio (0.40-0.45)
 			if (RH > 0.40)
 			{
-				if (!reconstructH(matches_inliers_H, H, K, R_cur_ref, t_cur_ref, init_3d_points, is_triangulated, 1.0, 50))
+				if (!reconstructH(matches_inliers_H, H, K, R_cur_ref, t_cur_ref, init_3d_points_, is_triangulated, 1.0, 50))
 					return false;
 			}
 			else
 			{
-				if (!reconstructF(matches_inliers_F, F, K, R_cur_ref, t_cur_ref, init_3d_points, is_triangulated, 1.0, 50))
+				if (!reconstructF(matches_inliers_F, F, K, R_cur_ref, t_cur_ref, init_3d_points_, is_triangulated, 1.0, 50))
 					return false;
 			}
 			
@@ -160,28 +159,7 @@ namespace openslam
 			R_cur_ref.copyTo(Tcw.rowRange(0, 3).colRange(0, 3));
 			t_cur_ref.copyTo(Tcw.rowRange(0, 3).col(3));
 			cur_frame->Tcw_ = Tcw;
-
-			//将三维点分配到map point
-			//创建map point分配到关键帧中
-			for (size_t i = 0; i < init_matchex_.size(); i++)
-			{
-				if (init_matchex_[i] < 0)
-					continue;
-
-				cv::Mat world_pos(init_3d_points[i]);//三角定位得到的世界坐标系中的点
-				//将初始化得到的3d点创建 MapPoint.这边内存释放放到map中,将点与特征进行关联
-				Feature *ref_feat = ref_features_[i];
-				Feature *cur_feat = cur_features_[init_matchex_[i]];
-				MapPoint* map_point = new MapPoint(world_pos, cur_feat);			
-				ref_feat->addMapPointRef(map_point);
-				cur_feat->addMapPointRef(map_point);
-				map_point->addFeatureRef(ref_feat);
-				map_point->addFeatureRef(cur_feat);
-				map_point->computeDistinctiveDescriptors();
-				map_point->updateNormalAndDepth();
-				///这样就完成添加map point与特征的对应
-			}
-			
+		
 			return true;
 		}
 
