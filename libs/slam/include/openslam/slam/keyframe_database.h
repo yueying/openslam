@@ -17,9 +17,9 @@ namespace openslam
 
 			KeyFrameDatabase(const ORBVocabulary &voc);
 
-			void add(KeyFramePtr keyframe);
+			void add(KeyFrame * keyframe);
 
-			void erase(KeyFramePtr keyframe);
+			void erase(KeyFrame * keyframe);
 
 			void clear();
 
@@ -27,7 +27,7 @@ namespace openslam
 
 			const ORBVocabulary* orb_voc_;//!< 关联的词汇表
 
-			std::vector<std::list<KeyFramePtr> > inverted_file_;//!<词袋是逆序的
+			std::vector<std::list<KeyFrame *> > inverted_file_;//!<词袋是逆序的
 
 			std::mutex mutex_keyframe_;//!< 对关键帧更新的时候的互斥锁
 		};

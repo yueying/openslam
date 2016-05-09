@@ -28,7 +28,7 @@ namespace openslam
 #define FRAME_GRID_ROWS 48
 #define FRAME_GRID_COLS 64
 		class Feature;
-
+		class KeyFrame;
 		typedef std::vector<Feature *> Features;
 
 		class SLAM_IMPEXP Frame
@@ -70,6 +70,9 @@ namespace openslam
 
 			/**得到相机外参*/
 			inline cv::Mat getCameraExternal() { return Tcw_; }
+
+			/**得到相机位姿*/
+			inline cv::Mat getPose() { return Tcw_.inv(); }
 
 			inline void setCameraExternal(cv::Mat &Tcw) { Tcw_ = Tcw; }
 		protected:
@@ -126,6 +129,7 @@ namespace openslam
 			static bool                  is_initial_computations_;//!<进行一次计算的标识，ture表示已经计算完成
 			std::vector<std::size_t>     grid_[FRAME_GRID_COLS][FRAME_GRID_ROWS];//!<一幅图像分配的格子,里面存储特征点的索引
 
+			KeyFrame*  ref_keyframe_;//!< 当前帧参考的关键帧
 		protected:
 			int                          keypoints_num_;//!< 特征点的个数
 			int                          levels_num_;   //!< 对应金字塔的层数

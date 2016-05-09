@@ -15,11 +15,11 @@ namespace openslam
 			Map();
 			~Map();
 			/**往地图中添加一个新的关键帧*/
-			void addKeyframe(KeyFramePtr new_keyframe);
+			void addKeyframe(KeyFrame * new_keyframe);
 
 			/** \brief 地图中删除关键帧
 			*/
-			void eraseKeyFrame(KeyFramePtr keyframe);
+			void eraseKeyFrame(KeyFrame * keyframe);
 
 			/** \brief 地图中添加map point
 			*/
@@ -39,13 +39,13 @@ namespace openslam
 
 			/** \brief 得到地图中的所有关键帧
 			*/
-			std::vector<KeyFramePtr> getAllKeyFrames();
+			std::vector<KeyFrame *> getAllKeyFrames();
 
 			/** \brief 得到地图中的所有map point
 			*/
 			std::vector<MapPoint*> getAllMapPoints();
 		protected:
-			std::set< KeyFramePtr > set_keyframes_;          //!< 地图中存储的所有关键帧
+			std::set< KeyFrame * > set_keyframes_;          //!< 地图中存储的所有关键帧
 			std::set< MapPoint * > set_map_points_;//!< 地图中存储的MapPoint
 			long unsigned int max_key_frame_id_;//!< 用于记录地图中关键帧的最大id
 			std::mutex mutex_map_;//!<map 更新用的锁

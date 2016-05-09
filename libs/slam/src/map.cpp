@@ -12,7 +12,7 @@ namespace openslam
 		{
 		}
 
-		void Map::addKeyframe(KeyFramePtr new_keyframe)
+		void Map::addKeyframe(KeyFrame * new_keyframe)
 		{
 			std::unique_lock<std::mutex> lock(mutex_map_);
 			set_keyframes_.insert(new_keyframe);
@@ -20,7 +20,7 @@ namespace openslam
 				max_key_frame_id_ = new_keyframe->id_;
 		}
 
-		void Map::eraseKeyFrame(KeyFramePtr keyframe)
+		void Map::eraseKeyFrame(KeyFrame * keyframe)
 		{
 			std::unique_lock<mutex> lock(mutex_map_);
 			set_keyframes_.erase(keyframe);
@@ -56,10 +56,10 @@ namespace openslam
 			return set_keyframes_.size();
 		}
 
-		std::vector<KeyFramePtr> Map::getAllKeyFrames()
+		std::vector<KeyFrame *> Map::getAllKeyFrames()
 		{
 			std::unique_lock<mutex> lock(mutex_map_);
-			return std::vector<KeyFramePtr>(set_keyframes_.begin(), set_keyframes_.end());
+			return std::vector<KeyFrame *>(set_keyframes_.begin(), set_keyframes_.end());
 		}
 
 		std::vector<MapPoint*> Map::getAllMapPoints()

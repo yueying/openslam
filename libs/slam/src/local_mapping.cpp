@@ -42,7 +42,7 @@ namespace openslam
 			return ;
 		}
 
-		void LocalMapping::insertKeyFrame(KeyFramePtr keyframe)
+		void LocalMapping::insertKeyFrame(KeyFrame * keyframe)
 		{
 			if (thread_ != nullptr)
 			{

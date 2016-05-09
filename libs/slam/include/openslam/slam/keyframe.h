@@ -9,6 +9,7 @@ namespace openslam
 	namespace slam
 	{
 		class MapPoint;
+	
 		class SLAM_IMPEXP KeyFrame : public Frame
 		{
 		public:
@@ -46,8 +47,6 @@ namespace openslam
 			bool is_bad_;
 
 		};
-
-		typedef std::shared_ptr<KeyFrame> KeyFramePtr;
 	}
 }
 

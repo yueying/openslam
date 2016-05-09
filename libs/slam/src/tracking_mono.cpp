@@ -70,7 +70,7 @@ namespace openslam
 		void TrackingMono::addImage(const cv::Mat& img, double timestamp)
 		{
 			// 初始化新帧
-			new_frame_ = std::make_shared<Frame>(cam_, img.clone(), timestamp, extractor_,orb_vocabulary_, is_rgb_order_);
+			cur_frame_ = std::make_shared<Frame>(cam_, img.clone(), timestamp, extractor_,orb_vocabulary_, is_rgb_order_);
 			bool res = false;
 			if (stage_ == STAGE_DEFAULT_FRAME)
 				res = processFrame();
@@ -79,17 +79,39 @@ namespace openslam
 			else if (stage_ == STAGE_FIRST_FRAME)
 				res = processFirstFrame();
 
+			//处理结束，将当前帧赋给上一帧，重置智能指针使用数
+			last_frame_ = cur_frame_;
+			cur_frame_.reset();
+
+			//添加轨迹数据
+			if (!cur_frame_->Tcw_.empty())
+			{
+				cv::Mat Tcr = cur_frame_->Tcw_*cur_frame_->ref_keyframe_->getPose();
+				camera_trajectory_.list_relative_frame_poses.push_back(Tcr);
+				camera_trajectory_.list_ref_keyframes.push_back(cur_frame_->ref_keyframe_);
+				camera_trajectory_.list_frame_times.push_back(cur_frame_->timestamp_);
+				camera_trajectory_.list_is_lost.push_back(tracking_state_ == TRACKING_LOST);
+			}
+			else
+			{
+				// 如果帧数据丢失就添加上一帧的数据
+				camera_trajectory_.list_relative_frame_poses.push_back(camera_trajectory_.list_relative_frame_poses.back());
+				camera_trajectory_.list_ref_keyframes.push_back(camera_trajectory_.list_ref_keyframes.back());
+				camera_trajectory_.list_frame_times.push_back(camera_trajectory_.list_frame_times.back());
+				camera_trajectory_.list_is_lost.push_back(tracking_state_ == TRACKING_LOST);
+			}
 		}
 
 		bool TrackingMono::processFirstFrame()
 		{
 			bool is_success = true;
-			is_success = initializer_.addFirstFrame(new_frame_);
+			is_success = initializer_.addFirstFrame(cur_frame_);
 			if (is_success)//如果初始化成功，则将当前帧转为关键帧，并计算BoW
 			{
-				init_keyframe_ = std::make_shared<KeyFrame>(*new_frame_);
+				KeyFrame *initkeyframe = new KeyFrame(*cur_frame_);
+				init_keyframe_ = initkeyframe;
 				init_keyframe_->computeBoW();
-				//插入关键帧到地图中
+				//插入关键帧到地图中,释放放到地图中
 				map_->addKeyframe(init_keyframe_);
 				stage_ = STAGE_SECOND_FRAME;
 			}
@@ -99,10 +121,10 @@ namespace openslam
 		bool TrackingMono::processSecondFrame()
 		{
 			bool is_success = true;
-			is_success = initializer_.addSecondFrame(new_frame_);
+			is_success = initializer_.addSecondFrame(cur_frame_);
 			if (is_success)//如果初始化成功，则将当前帧转为关键帧，并计算BoW
 			{
-				KeyFramePtr cur_keyframe = std::make_shared<KeyFrame>(*new_frame_);
+				KeyFrame *cur_keyframe = new KeyFrame(*cur_frame_);
 				cur_keyframe->computeBoW();
 				//插入关键帧到地图中
 				map_->addKeyframe(cur_keyframe);
@@ -158,7 +180,13 @@ namespace openslam
 						map_point->setWorldPosition(map_point->getWorldPosition()*inv_median_depth);
 					}
 				}
-
+				//给出当前帧的参考关键帧
+				cur_frame_->ref_keyframe_ = cur_keyframe;
+				// 帧处理完，赋给上一帧
+				last_keyframe_ = cur_keyframe;
+				// 将当前帧赋给参考帧，供局部优化使用
+				ref_keyframe_ = cur_keyframe;
+				
 				stage_ = STAGE_DEFAULT_FRAME;
 			}
 
@@ -167,22 +195,9 @@ namespace openslam
 
 		bool TrackingMono::processFrame()
 		{
-			bool is_success = true;
-			if (!is_only_tracking_)//添加局部优化
-			{
-			}
-			else
-			{
-				if (tracking_state_ == TRACKING_LOST)
-				{
-					
-				}
-				else
-				{
-
-				}
-			}
-			return is_success;
+			bool is_ok = true;
+			
+			return is_ok;
 		}
 	}
 }

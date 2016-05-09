@@ -26,7 +26,7 @@ namespace openslam
 
 			/** 插入关键帧，以便下一步进行局部地图优化
 			*/
-			void insertKeyFrame(KeyFramePtr keyframe);
+			void insertKeyFrame(KeyFrame * keyframe);
 		protected:
 			void run();
 
@@ -36,7 +36,7 @@ namespace openslam
 			std::mutex mutex_new_keyframes_;//!<添加关键帧锁
 			bool is_runing_;//!<用于线程是否结束
 			Map* map_;
-			std::queue<KeyFramePtr> list_new_keyframes_;//!<存储关键帧列表，主要进行局部地图优化
+			std::queue<KeyFrame *> list_new_keyframes_;//!<存储关键帧列表，主要进行局部地图优化
 		};
 	}
 }
