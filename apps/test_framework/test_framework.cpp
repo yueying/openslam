@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 	AbstractCamera* cam = new MonocularCamera(752, 480, 315.5, 315.5, 376.0, 240.0);
 	ORBextractor *extractor = new ORBextractor(2*1000);
 
-	System system("D:\\dataset\\Vocabulary\\ORBvoc.bin", "D:\\dataset\\TUM1.yaml", System::SENSOR_MONOCULAR);
+	System system("D:\\dataset\\Vocabulary\\ORBvoc.bin", "D:\\dataset\\TUM1.yaml");
 
 	system.addImage(first_img, 0);
 	system.addImage(second_img, 1);

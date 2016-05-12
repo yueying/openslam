@@ -67,5 +67,16 @@ namespace openslam
 			std::unique_lock<mutex> lock(mutex_map_);
 			return std::vector<MapPoint*>(set_map_points_.begin(), set_map_points_.end());
 		}
+
+		void Map::setReferenceMapPoints(const std::vector<MapPoint *> &vec_map_points)
+		{
+			std::unique_lock<mutex> lock(mutex_map_);
+			vec_ref_map_points_ = vec_map_points;
+		}
+
+		void Map::getVectorCovisibleKeyFrames(const KeyFrame *frame, std::vector<KeyFrame*> &vec_neigh_keyframes)
+		{
+
+		}
 	}
 }

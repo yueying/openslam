@@ -11,15 +11,8 @@ namespace openslam
 		class SLAM_IMPEXP System
 		{
 		public:
-			/** 输入传感器
-			*/
-			enum Sensor
-			{
-				SENSOR_MONOCULAR = 0,
-				SENSOR_STEREO = 1,
-				SENSOR_RGBD = 2
-			};
-			System(const std::string &voc_file_name, const std::string &settings_file_name, const Sensor sensor, const bool is_use_viewer = true);
+			
+			System(const std::string &voc_file_name, const std::string &settings_file_name, const bool is_use_viewer = true);
 			~System();
 
 			/**输入图像，得到结果*/
@@ -27,7 +20,7 @@ namespace openslam
 
 			
 		protected:
-			Sensor input_sensor_;//!<输入传感器
+
 			ORBVocabulary* orb_vocabulary_;//!< 放在这边用于导入词汇表
 			TrackingBase* tracker_;//!<跟踪的基类，根据不同的传感器，跟踪不同
 			Map *map_;//!<地图信息

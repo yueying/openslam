@@ -74,7 +74,11 @@ namespace openslam
 			/**得到相机位姿*/
 			inline cv::Mat getPose() { return Tcw_.inv(); }
 
-			inline void setCameraExternal(cv::Mat &Tcw) { Tcw_ = Tcw; }
+			/**设置相机的外参矩阵*/
+			inline void setCameraExternal(cv::Mat Tcw) { Tcw_ = Tcw.clone(); }
+
+			/**判断三维点是否在图像帧内,通过看不考虑畸变的投影点是否在畸变处理之后的图像范围内*/
+			bool isInFrame(const cv::Mat &point3d, cv::Point2f &point2d);
 		protected:
 			/**提供帧数据向关键帧数据的拷贝，不允许自身拷贝*/
 			Frame(const Frame &frame);
@@ -111,7 +115,7 @@ namespace openslam
 			bool                         is_rgb_order_; //!< 图像顺序，true图像是RGB的顺序，false是BGR的顺序
 			float                        scale_factor_; //!< 对应金字塔图像的尺度因子		
 			Features                     features_;     //!< 帧对应的特征
-			cv::Mat                      Tcw_;        //!< 从世界坐标系(w)orld转到摄像机坐标系(f)rame，刚性变换Rt
+			cv::Mat                      Tcw_;        //!< 从世界坐标系(w)orld转到摄像机坐标系(c)amera，刚性变换Rt
 			ORBextractor*                extractor_;    //!< 把特征提取放到帧中
 
 			// Bag of Words Vector structures.

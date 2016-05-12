@@ -38,7 +38,7 @@ namespace openslam
 			{
 				float track_motion_model_matcher_nnratio;//!<在根据运动模型跟踪的时候，匹配最小距离与次最小距离直接的比值阈值
 				float track_ref_keyframe_matcher_nnratio;//!<对参考关键帧跟踪的时候，匹配最小距离与次最小距离直接的比值阈值
-				float projection_threshold;//!<投影阈值，单目与双目不一致
+				float projection_threshold;//!<投影匹配搜索的窗体半价阈值，单目与双目不一致
 
 				Options() :projection_threshold(15.f),
 					track_motion_model_matcher_nnratio(0.9),
@@ -48,6 +48,7 @@ namespace openslam
 
 			struct CameraTrajectory
 			{
+				std::list<cv::Mat> list_frame_tcw;
 				std::list<cv::Mat> list_relative_frame_poses;
 				std::list<KeyFrame *> list_ref_keyframes;
 				std::list<double> list_frame_times;
@@ -72,6 +73,15 @@ namespace openslam
 			bool trackReferenceKeyFrame();
 
 			bool trackLocalMap();
+
+			bool relocalization();
+		protected:
+			/**设置上一帧的位姿，防止丢失*/
+			void updateLastFrame();
+
+			void updateLocalMap();
+			void updateLocalPoints();
+			void updateLocalKeyFrames();
 		protected:
 			TrackingState tracking_state_;//!<表示设置的跟踪状态
 			Map  *map_;
@@ -86,6 +96,8 @@ namespace openslam
 			KeyFrame* ref_keyframe_;//!<局部地图中使用参考帧
 			KeyFrame* last_keyframe_;//!< 上一个关键帧
 			FramePtr last_frame_;//!<上一帧
+
+			std::vector<MapPoint*> vec_local_map_points_;//!<跟踪对应的mappoint，主要用于可视化显示
 		};
 	}
 }

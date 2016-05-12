@@ -49,5 +49,10 @@ namespace openslam
 		{
 			map_point_ = map_point;
 		}
+
+		void Feature::addFrameRef(Frame *frame)
+		{
+			frame_ = frame;
+		}
 	}
 }

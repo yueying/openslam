@@ -15,7 +15,12 @@ namespace openslam
 			world_position_(pos), 
 			cur_obs_(cur_obs),
 			obs_num_(0),
-			is_bad_(false)
+			is_bad_(false),
+			is_outlier_(false),
+			track_in_view_(true),
+			last_frame_seen_id_(0),
+			gba_for_keyframe_num_(0),
+			local_ba_for_keyframe_id_(0)
 		{
 			normal_vector_ = cv::Mat::zeros(3, 1, CV_32F);
 		}
@@ -109,6 +114,12 @@ namespace openslam
 			}
 		}
 
+		cv::Mat MapPoint::getDescriptor()
+		{
+			std::unique_lock<mutex> lock(mutex_features_);
+			return descriptor_.clone();
+		}
+
 		void MapPoint::updateNormalAndDepth()
 		{
 			std::list<Feature*>   obs;
@@ -173,7 +184,7 @@ namespace openslam
 			return is_bad_;
 		}
 
-		int MapPoint::observations()
+		int MapPoint::observationsNum()
 		{
 			std::unique_lock<mutex> lock(mutex_features_);
 			return obs_num_;

@@ -1,39 +1,39 @@
-#include <openslam/slam/local_mapping.h>
+#include <openslam/slam/loop_closing.h>
 
 namespace openslam
 {
 	namespace slam
 	{
-		LocalMapping::LocalMapping(Map* map):
+		LoopClosing::LoopClosing(Map* map) :
 			map_(map),
-			local_mapping_stop_(false),
+			loop_closing_stop_(false),
 			thread_(nullptr),
 			is_runing_(true)
 		{
 
 		}
 
-		LocalMapping::~LocalMapping()
+		LoopClosing::~LoopClosing()
 		{
 			stopThread();
 		}
 
-		void LocalMapping::startThread()
+		void LoopClosing::startThread()
 		{
-			thread_ = new std::thread(&LocalMapping::run,this);
+			thread_ = new std::thread(&LoopClosing::run, this);
 		}
 
-		void LocalMapping::stopThread()
+		void LoopClosing::stopThread()
 		{
 			if (thread_ != nullptr)
 			{
-				local_mapping_stop_ = true;
+				loop_closing_stop_ = true;
 				thread_->detach();
 				is_runing_ = false;
 			}
 		}
 
-		void LocalMapping::run()
+		void LoopClosing::run()
 		{
 			while (is_runing_)
 			{
@@ -42,7 +42,7 @@ namespace openslam
 			return ;
 		}
 
-		void LocalMapping::insertKeyFrame(KeyFrame * keyframe)
+		void LoopClosing::insertKeyFrame(KeyFrame * keyframe)
 		{
 			if (thread_ != nullptr)
 			{

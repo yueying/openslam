@@ -127,6 +127,30 @@ namespace openslam
 			}
 		}
 
+
+		bool Frame::isInFrame(const cv::Mat &point3d, cv::Point2f &point2d)
+		{
+			const cv::Mat Rcw = Tcw_.rowRange(0, 3).colRange(0, 3);
+			const cv::Mat tcw = Tcw_.rowRange(0, 3).col(3);
+			cv::Mat x3Dc = Rcw*point3d + tcw;
+			const float xc = x3Dc.at<float>(0);
+			const float yc = x3Dc.at<float>(1);
+			const float invzc = 1.0 / x3Dc.at<float>(2);
+			if (invzc < 0)
+				return false;
+
+			float u = cam_->fx()*xc*invzc + cam_->cx();
+			float v = cam_->fy()*yc*invzc + cam_->cy();
+
+			if (u<min_bound_x_ || u>max_bound_x_)
+				return false;
+			if (v<min_bound_y_ || v>max_bound_y_)
+				return false;
+
+			point2d.x = u;
+			point2d.y = v;
+		}
+
 		void Frame::computeImageBounds(const cv::Mat &image)
 		{
 			// 如果是畸变图像

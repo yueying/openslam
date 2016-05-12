@@ -39,7 +39,10 @@ namespace openslam
 		public:
 			static long unsigned int keyframe_counter_;//!< 创建关键帧的计数器，用于设置帧的唯一id
 			long unsigned int keyframe_id_;//!< 关键帧的唯一id
-
+			cv::Mat gba_Tcw_;
+			long unsigned int gba_for_keyframe_num_;
+			long unsigned int local_ba_for_keyframe_id_;
+			long unsigned int fixed_ba_for_keyframe_id_;
 		protected:
 			std::mutex mutex_pose_;
 			std::mutex mutex_features_;

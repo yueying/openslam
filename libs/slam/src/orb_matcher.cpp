@@ -1,6 +1,7 @@
 #include <openslam/slam/orb_matcher.h>
 #include <openslam/slam/frame.h>
 #include <openslam/slam/feature.h>
+#include <openslam/slam/keyframe.h>
 
 namespace openslam
 {
@@ -12,7 +13,7 @@ namespace openslam
 		const int ORBmatcher::TH_LOW = 50;
 		const int ORBmatcher::HISTO_LENGTH = 30;
 
-		ORBmatcher::ORBmatcher(float nnratio, bool check_orientation):
+		ORBmatcher::ORBmatcher(float nnratio, bool check_orientation) :
 			nn_ratio_(nnratio),
 			is_check_orientation_(check_orientation)
 		{
@@ -146,6 +147,107 @@ namespace openslam
 
 		}
 
+		int ORBmatcher::searchByProjection(FramePtr cur_frame, const FramePtr last_frame, const float th)
+		{
+			int nmatches = 0;
+			// 主要用于匹配特征方向判断
+			std::vector<int> rot_hist[HISTO_LENGTH];
+			for (int i = 0; i < HISTO_LENGTH; i++)
+				rot_hist[i].reserve(500);
+			const float factor = 1.0f / HISTO_LENGTH;
+
+			// 开始对上一帧的所有map point进行遍历
+			for (int i = 0; i < last_frame->getKeypointsNum(); i++)
+			{
+				MapPoint *map_point = last_frame->features_[i]->map_point_;
+				if (map_point&&!map_point->is_outlier_)
+				{
+					// 判断当前帧是否能看到该map point
+					cv::Mat x3Dw = map_point->getWorldPosition();
+					cv::Point2f point2d;
+					if (cur_frame->isInFrame(x3Dw, point2d))
+						continue;
+					int last_octave = last_frame->features_[i]->keypoint_.octave;//获得上一帧特征对应的尺度层数，在相同层进行匹配
+					float radius = th*cur_frame->getScaleFactors()[last_octave];//确定搜索半径
+
+					std::vector<size_t> keypoint_indices;//可能的匹配点
+					keypoint_indices = cur_frame->getFeaturesInArea(point2d.x, point2d.y, radius, last_octave - 1, last_octave + 1);
+
+					if (keypoint_indices.empty())//没找到，则返回
+						continue;
+					// 得到目前map point的最好的特征描述，用于匹配
+					const cv::Mat map_point_desc = map_point->getDescriptor();
+					int best_dist = 256;
+					int best_index2 = -1;
+					for (std::vector<size_t>::const_iterator vit = keypoint_indices.begin(), vend = keypoint_indices.end(); vit != vend; vit++)
+					{
+						const size_t i2 = *vit;
+						Feature * feature = cur_frame->features_[i2];
+						MapPoint *map_point = feature->map_point_;
+						if (map_point)
+						{
+							if (map_point->observationsNum() > 0)//如果该map point已经有对应
+								continue;
+						}
+
+						const cv::Mat &d = feature->descriptor_;
+
+						const int dist = descriptorDistance(map_point_desc, d);
+
+						if (dist < best_dist)
+						{
+							best_dist = dist;
+							best_index2 = i2;
+						}
+					}
+
+					if (best_dist <= TH_HIGH)
+					{
+						cur_frame->features_[best_index2]->map_point_ = map_point;
+						nmatches++;
+
+						if (is_check_orientation_)
+						{
+							float rot = last_frame->features_[i]->undistored_keypoint_.angle - cur_frame->features_[best_index2]->undistored_keypoint_.angle;
+							if (rot < 0.0)
+								rot += 360.0f;
+							int bin = round(rot*factor);
+							if (bin == HISTO_LENGTH)
+								bin = 0;
+							assert(bin >= 0 && bin < HISTO_LENGTH);
+							rot_hist[bin].push_back(best_index2);
+						}
+					}
+
+				}
+			}
+
+			if (is_check_orientation_)
+			{
+				int ind1 = -1;
+				int ind2 = -1;
+				int ind3 = -1;
+
+				computeThreeMaxima(rot_hist, HISTO_LENGTH, ind1, ind2, ind3);
+
+				for (int i = 0; i < HISTO_LENGTH; i++)
+				{
+					if (i != ind1 && i != ind2 && i != ind3)
+					{
+						for (size_t j = 0, jend = rot_hist[i].size(); j < jend; j++)
+						{
+							cur_frame->features_[rot_hist[i][j]]->map_point_ = static_cast<MapPoint*>(nullptr);
+							nmatches--;
+						}
+					}
+				}
+			}
+
+			return nmatches;
+
+
+		}
+
 		void ORBmatcher::computeThreeMaxima(std::vector<int>* histo, const int L, int &ind1, int &ind2, int &ind3)
 		{
 			int max1 = 0;
@@ -208,5 +310,137 @@ namespace openslam
 			return dist;
 		}
 
+		int ORBmatcher::searchByBoW(KeyFrame* keyframe, FramePtr frame)
+		{
+			// 关键帧上多有的特征对应的map point
+			const std::vector<MapPoint*> map_points_in_keyframe = keyframe->getMapPointMatches();
+			// 构建临时存放匹配的map point的点
+			std::vector<MapPoint*> map_point_matches = std::vector<MapPoint*>(frame->getKeypointsNum(), static_cast<MapPoint*>(nullptr));
+
+			const DBoW2::FeatureVector &feat_vector = keyframe->feat_vector_;
+
+			int nmatches = 0;
+			// 用于匹配方向判断
+			std::vector<int> rot_hist[HISTO_LENGTH];
+			for (int i = 0; i < HISTO_LENGTH; i++)
+				rot_hist[i].reserve(500);
+			const float factor = 1.0f / HISTO_LENGTH;
+			// 对
+			DBoW2::FeatureVector::const_iterator keyframe_feat_vector_it = feat_vector.begin();
+			DBoW2::FeatureVector::const_iterator frame_feat_vector_it = frame->feat_vector_.begin();
+			DBoW2::FeatureVector::const_iterator keyframe_feat_vector_end = feat_vector.end();
+			DBoW2::FeatureVector::const_iterator frame_feat_vector_end = frame->feat_vector_.end();
+
+			while (keyframe_feat_vector_it != keyframe_feat_vector_end && frame_feat_vector_it != frame_feat_vector_end)
+			{
+				if (keyframe_feat_vector_it->first == frame_feat_vector_it->first)
+				{
+					const std::vector<unsigned int> keyframe_indices = keyframe_feat_vector_it->second;
+					const std::vector<unsigned int> frame_indices = frame_feat_vector_it->second;
+
+					for (size_t keyframe_i = 0; keyframe_i < keyframe_indices.size(); keyframe_i++)
+					{
+						const unsigned int real_keyframe_id = keyframe_indices[keyframe_i];
+
+						MapPoint* map_point = map_points_in_keyframe[real_keyframe_id];
+
+						if (!map_point)
+							continue;
+
+						if (map_point->isBad())
+							continue;
+
+						const cv::Mat &keyframe_desc = keyframe->features_[real_keyframe_id]->descriptor_;
+
+						int best_dist1 = 256;
+						int best_frame_id = -1;
+						int best_dist2 = 256;
+
+						for (size_t frame_i = 0; frame_i < frame_indices.size(); frame_i++)
+						{
+							const unsigned int real_frame_id = frame_indices[frame_i];
+
+							if (map_point_matches[real_frame_id])
+								continue;
+
+							const cv::Mat &frame_desc = frame->features_[real_frame_id]->descriptor_;
+
+							const int dist = descriptorDistance(keyframe_desc, frame_desc);
+
+							if (dist < best_dist1)
+							{
+								best_dist2 = best_dist1;
+								best_dist1 = dist;
+								best_frame_id = real_frame_id;
+							}
+							else if (dist < best_dist2)
+							{
+								best_dist2 = dist;
+							}
+						}
+
+						if (best_dist1 <= TH_LOW)
+						{
+							if (static_cast<float>(best_dist1) < nn_ratio_*static_cast<float>(best_dist2))
+							{
+								map_point_matches[best_frame_id] = map_point;
+								// 赋给对应的特征
+								frame->features_[best_frame_id]->map_point_ = map_point;
+
+								const cv::KeyPoint &kp = keyframe->features_[real_keyframe_id]->undistored_keypoint_;
+
+								if (is_check_orientation_)
+								{
+									float rot = kp.angle - frame->features_[best_frame_id]->keypoint_.angle;
+									if (rot < 0.0)
+										rot += 360.0f;
+									int bin = round(rot*factor);
+									if (bin == HISTO_LENGTH)
+										bin = 0;
+									assert(bin >= 0 && bin < HISTO_LENGTH);
+									rot_hist[bin].push_back(best_frame_id);
+								}
+								nmatches++;
+							}
+						}
+
+					}
+
+					keyframe_feat_vector_it++;
+					frame_feat_vector_it++;
+				}
+				else if (keyframe_feat_vector_it->first < frame_feat_vector_it->first)
+				{
+					keyframe_feat_vector_it = feat_vector.lower_bound(frame_feat_vector_it->first);
+				}
+				else
+				{
+					frame_feat_vector_it = frame->feat_vector_.lower_bound(keyframe_feat_vector_it->first);
+				}
+			}
+
+
+			if (is_check_orientation_)
+			{
+				int ind1 = -1;
+				int ind2 = -1;
+				int ind3 = -1;
+
+				computeThreeMaxima(rot_hist, HISTO_LENGTH, ind1, ind2, ind3);
+
+				for (int i = 0; i < HISTO_LENGTH; i++)
+				{
+					if (i == ind1 || i == ind2 || i == ind3)
+						continue;
+					for (size_t j = 0, jend = rot_hist[i].size(); j < jend; j++)
+					{
+						map_point_matches[rot_hist[i][j]] = static_cast<MapPoint*>(nullptr);
+						nmatches--;
+					}
+				}
+			}
+
+			return nmatches;
+		}
 	}
 }

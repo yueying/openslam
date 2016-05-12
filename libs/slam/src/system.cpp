@@ -2,20 +2,20 @@
 #include <openslam/utils/notify.h>
 #include <openslam/utils/timer.h>
 #include <openslam/slam/tracking_mono.h>
+#include <openslam/slam/config.h>
 
 namespace openslam
 {
 	namespace slam
 	{
 		System::System(const std::string &voc_file_name, const std::string &settings_file_name
-			, const Sensor sensor, const bool is_use_viewer) :
-			input_sensor_(sensor)
+			, const bool is_use_viewer)
 		{
-			if (input_sensor_ == SENSOR_MONOCULAR)
+			if (Config::sensorType() == Config::SENSOR_MONOCULAR)
 				OPENSLAM_INFO << "Monocular" << std::endl;
-			else if (input_sensor_ == SENSOR_STEREO)
+			else if (Config::sensorType() == Config::SENSOR_STEREO)
 				OPENSLAM_INFO << "Stereo" << std::endl;
-			else if (input_sensor_ == SENSOR_RGBD)
+			else if (Config::sensorType() == Config::SENSOR_RGBD)
 				OPENSLAM_INFO << "RGB-D" << std::endl;
 			//导入ORB的词汇表
 			utils::Timer timer;
@@ -38,14 +38,14 @@ namespace openslam
 			OPENSLAM_INFO << "Vocabulary loaded in " << timer.Stop() << "s" << std::endl;
 
 			//根据不同的传感器实例化不同的类
-			switch (input_sensor_)
+			switch (Config::sensorType())
 			{
-			case SENSOR_MONOCULAR:
+			case Config::SENSOR_MONOCULAR:
 				tracker_ = new TrackingMono(settings_file_name, orb_vocabulary_);
 				break;
-			case SENSOR_STEREO:
+			case Config::SENSOR_STEREO:
 				break;
-			case SENSOR_RGBD:
+			case Config::SENSOR_RGBD:
 				break;
 			default:
 				break;

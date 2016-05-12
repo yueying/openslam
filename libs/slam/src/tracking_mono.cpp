@@ -79,14 +79,15 @@ namespace openslam
 			else if (stage_ == STAGE_FIRST_FRAME)
 				res = processFirstFrame();
 
-			//处理结束，将当前帧赋给上一帧，重置智能指针使用数
+			//处理结束，将当前帧赋给上一帧
 			last_frame_ = cur_frame_;
-			cur_frame_.reset();
 
 			//添加轨迹数据
 			if (!cur_frame_->Tcw_.empty())
 			{
+				// 当前帧
 				cv::Mat Tcr = cur_frame_->Tcw_*cur_frame_->ref_keyframe_->getPose();
+				camera_trajectory_.list_frame_tcw.push_back(cur_frame_->Tcw_);
 				camera_trajectory_.list_relative_frame_poses.push_back(Tcr);
 				camera_trajectory_.list_ref_keyframes.push_back(cur_frame_->ref_keyframe_);
 				camera_trajectory_.list_frame_times.push_back(cur_frame_->timestamp_);
@@ -95,11 +96,14 @@ namespace openslam
 			else
 			{
 				// 如果帧数据丢失就添加上一帧的数据
+				camera_trajectory_.list_frame_tcw.push_back(camera_trajectory_.list_frame_tcw.back());
 				camera_trajectory_.list_relative_frame_poses.push_back(camera_trajectory_.list_relative_frame_poses.back());
 				camera_trajectory_.list_ref_keyframes.push_back(camera_trajectory_.list_ref_keyframes.back());
 				camera_trajectory_.list_frame_times.push_back(camera_trajectory_.list_frame_times.back());
 				camera_trajectory_.list_is_lost.push_back(tracking_state_ == TRACKING_LOST);
 			}
+			//重置智能指针使用数
+			cur_frame_.reset();
 		}
 
 		bool TrackingMono::processFirstFrame()
@@ -113,6 +117,14 @@ namespace openslam
 				init_keyframe_->computeBoW();
 				//插入关键帧到地图中,释放放到地图中
 				map_->addKeyframe(init_keyframe_);
+
+				//给出当前帧的参考关键帧
+				cur_frame_->ref_keyframe_ = initkeyframe;
+				// 帧处理完，赋给上一帧
+				last_keyframe_ = initkeyframe;
+				// 将当前帧赋给参考帧，供局部优化使用
+				ref_keyframe_ = initkeyframe;
+
 				stage_ = STAGE_SECOND_FRAME;
 			}
 			return is_success;
@@ -149,6 +161,7 @@ namespace openslam
 					map_point->computeDistinctiveDescriptors();
 					map_point->updateNormalAndDepth();
 
+					map_point->is_outlier_ = false;
 					map_->addMapPoint(map_point);
 					///这样就完成添加map point与特征的对应
 				}
@@ -187,7 +200,11 @@ namespace openslam
 				// 将当前帧赋给参考帧，供局部优化使用
 				ref_keyframe_ = cur_keyframe;
 				
+				vec_local_map_points_ = map_->getAllMapPoints();
+				map_->setReferenceMapPoints(vec_local_map_points_);
+
 				stage_ = STAGE_DEFAULT_FRAME;
+				tracking_state_ == TRACKING_OK;
 			}
 
 			return is_success;

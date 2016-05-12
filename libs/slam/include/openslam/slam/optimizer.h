@@ -17,20 +17,20 @@ namespace openslam
 		class SLAM_IMPEXP Optimizer
 		{
 		public:
-			/*void static bundleAdjustment(const std::vector<KeyFrame *> &vec_key_frame, const std::vector<MapPoint*> &vec_map_points,
+			void static bundleAdjustment(const std::vector<KeyFrame *> &vec_key_frame, const std::vector<MapPoint*> &vec_map_points,
 				int iter_num = 5, bool *stop_flag = NULL, const unsigned long loop_keyframe_num = 0,
 				const bool is_robust = true);
 
-				void static globalBundleAdjustemnt(Map* map, int iter_num = 5, bool *stop_flag = NULL,
-				const unsigned long loop_keyframe_num = 0, const bool is_robust = true);
+			void static globalBundleAdjustemnt(Map* map, int iter_num = 5, bool *stop_flag = NULL,
+			const unsigned long loop_keyframe_num = 0, const bool is_robust = true);
 
-				void static localBundleAdjustment(KeyFrame * keyframe, bool *stop_flag, Map *map);
+			void static localBundleAdjustment(KeyFrame * keyframe, bool *stop_flag, Map *map);
 
-				int static poseOptimization(FramePtr frame);*/
+			int static poseOptimization(FramePtr frame);
 
 		};
 	}
-} 
+}
 
 
 #endif // OPENSLAM_SLAM_OPTIMIZER_H_

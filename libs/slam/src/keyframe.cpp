@@ -6,9 +6,16 @@ namespace openslam
 	namespace slam
 	{
 		long unsigned int KeyFrame::keyframe_counter_ = 0;
-		KeyFrame::KeyFrame(const Frame &frame) :Frame(frame), is_bad_(false)
+		KeyFrame::KeyFrame(const Frame &frame) :Frame(frame), is_bad_(false),
+			gba_for_keyframe_num_(0),
+			local_ba_for_keyframe_id_(0),
+			fixed_ba_for_keyframe_id_(0)
 		{
+			//保存自己的index索引
 			keyframe_id_ = keyframe_counter_++;
+			//将对应特征的帧的指针引用该为自己
+			std::for_each(features_.begin(), features_.end(), [&](Feature* ftr){ if (ftr) ftr->addFrameRef(this); });
+
 		}
 
 		KeyFrame::~KeyFrame()
@@ -61,7 +68,7 @@ namespace openslam
 					{
 						if (check_obs)
 						{
-							if (map_point->observations() >= min_obs)
+							if (map_point->observationsNum() >= min_obs)
 								points_num++;
 						}
 						else

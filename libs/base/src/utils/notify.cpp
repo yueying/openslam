@@ -115,7 +115,7 @@ struct NotifySingleton
 	NotifySingleton()
 	{
 		//默认消息等级
-		_notifyLevel = openslam::utils::NOTICE; 
+		_notifyLevel = openslam::utils::INFO;
 
 		char* OPENSLAMNOTIFYLEVEL = getenv("OPENSLAM_NOTIFY_LEVEL");
 		if (!OPENSLAMNOTIFYLEVEL) OPENSLAMNOTIFYLEVEL = getenv("OPENSLAMNOTIFYLEVEL");

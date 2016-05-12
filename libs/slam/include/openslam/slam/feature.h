@@ -24,6 +24,11 @@ namespace openslam
 			/** 添加特征对应的map point
 			*/
 			void addMapPointRef(MapPoint *map_point);
+
+			/** 添加特征所对应的帧
+			*/
+			void addFrameRef(Frame *frame);
+
 		private:
 			void undistortKeyPoint();
 		public:

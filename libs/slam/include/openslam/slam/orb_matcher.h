@@ -7,6 +7,7 @@ namespace openslam
 {
 	namespace slam
 	{
+		class MapPoint;
 		class SLAM_IMPEXP ORBmatcher
 		{
 		public:
@@ -24,6 +25,13 @@ namespace openslam
 			int searchForInitialization(FramePtr ref_frame, FramePtr cur_frame,
 				std::vector<cv::Point2f> &prev_matched, std::vector<int> &matches_ref_cur, int window_size = 10);
 
+			/** 将上一帧中获得的mappoint点投影到当前帧中，进行匹配
+			*/
+			int searchByProjection(FramePtr cur_frame, const FramePtr last_frame, const float th);
+
+			/**
+			*/
+			int searchByBoW(KeyFrame *keyframe, FramePtr frame);
 		protected:
 			/** \brief 计算直方图中高度前3的柱体的索引
 			*/
